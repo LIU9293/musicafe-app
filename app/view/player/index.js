@@ -3,7 +3,8 @@
  */
 
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Slider, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, Slider, TouchableOpacity, Image,
+   Alert, InteractionManager } from 'react-native';
 import Video from 'react-native-video';
 import oc from 'oc';
 import api from 'api';
@@ -57,14 +58,13 @@ class Player extends Component{
     }
   }
 
-  componentWillMount(){
-    this.setState({ songlist: this.props.currentList }, () => {
-      this.getSongInfoFromList();
-    });
-  }
-
   componentDidMount(){
-    this.props.changePlayStatus(true);
+    InteractionManager.runAfterInteractions(() => {
+      this.setState({ songlist: this.props.currentList }, () => {
+        this.getSongInfoFromList();
+      });
+      this.props.changePlayStatus(true);
+    });
   }
 
   componentWillUnmount(){
