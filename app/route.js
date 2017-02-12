@@ -22,6 +22,7 @@ import Player from 'Player';
          return(
            <SonglistDetail
              navigator={navigator}
+             PlayerRouter={this.props.PlayerRouter}
              id={route.id}
              vendor={route.vendor}
              cover={route.cover}
@@ -34,6 +35,7 @@ import Player from 'Player';
          return(
            <SearchDetail
              navigator={navigator}
+             PlayerRouter={this.props.PlayerRouter}
              type={route.type}
              searchKey={route.searchKey}
            />
@@ -42,24 +44,25 @@ import Player from 'Player';
          return(
            <UserPlaylistDetail
              navigator={navigator}
+             PlayerRouter={this.props.PlayerRouter}
              name={route.name}
              ident={route.listIdent}
            />
          )
        case 'AddPlaylist':
          return(
-           <AddPlaylist navigator = {navigator} />
-         )
-       case 'Player':
-         return(
-           <Player
-             navigator={navigator}
-             defaultSongID={route.defaultSongID}
-             playNow={route.playNow}
-           />
+           <AddPlaylist
+            navigator={navigator} 
+            PlayerRouter={this.props.PlayerRouter}
+          />
          )
        default:
-         return <TabView navigator = {navigator} />;
+         return(
+           <TabView
+            navigator={navigator}
+            PlayerRouter={this.props.PlayerRouter}
+           />
+         );
      }
    }
 

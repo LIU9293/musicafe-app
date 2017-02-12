@@ -79,7 +79,7 @@ class TabView extends Component{
 
 const mapStateToProps = (state) => {
   return{
-    barStyle: state.config.barStyle,
+    barStyle: state.appStatus.barStyle,
   }
 }
 

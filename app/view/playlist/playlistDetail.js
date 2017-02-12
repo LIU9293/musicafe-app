@@ -4,7 +4,7 @@
 
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View, StyleSheet, Text, TouchableOpacity, Navigator,
+import { View, StyleSheet, Text, TouchableOpacity, Navigator, Image,
   TouchableHighlight, ScrollView, ListView, AsyncStorage, Alert } from 'react-native';
 import Wapper from 'wapper';
 import oc from 'oc';
@@ -12,6 +12,7 @@ import { size } from 'lib';
 import Navbar from 'navbar';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SwipeListView } from 'react-native-swipe-list-view';
+const GIF = require('../../assets/images/wave.gif');
 
 class UserPlaylistDetail extends Component{
 
@@ -65,11 +66,11 @@ class UserPlaylistDetail extends Component{
       }
     });
     this.props.updateCurrentPlaylist(newData, this.state.data[index].id);
-    this.props.navigator.push({
+    this.props.PlayerRouter.push({
       ident: 'Player',
       playNow: true,
       sceneConfig: {
-        ...Navigator.SceneConfigs.PushFromRight,
+        ...Navigator.SceneConfigs.FloatFromBottom,
         gestures: {jumpBack: Navigator.SceneConfigs.PushFromRight.gestures.pop}
       }
     });
@@ -105,6 +106,12 @@ class UserPlaylistDetail extends Component{
          left={<Icon name="ios-arrow-back" size={24} style={{color: oc.gray1}} />}
          middle={<Text numberOfLines={1} style={{color: oc.gray1}}>{this.props.name}</Text>}
          onLeft={(e) => {this.props.navigator.pop()}}
+         right={
+           this.props.playing
+           ? <Image source={GIF} style={{width: 15, height: 15}} />
+           : null
+         }
+         onRight={(e) => {this.props.PlayerRouter.jumpForward()}}
         />
         <SwipeListView
             dataSource={this.state.dataSource}
@@ -148,7 +155,8 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = (state) => {
   return{
-    playlist: state.playlist
+    playlist: state.playlist,
+    playing: state.appStatus.playing
   }
 }
 

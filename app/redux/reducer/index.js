@@ -1,5 +1,23 @@
 import { combineReducers } from 'redux';
-import { searchKey, searchResult } from './search';
+
+const searchKeyInitState = {
+  key: null,
+  type: 'album',
+  vendor: ['xiami', 'qq', 'netease']
+}
+
+const searchKey = (state = searchKeyInitState, action) => {
+  switch (action.type) {
+    case 'SEARCH_KEY_UPDATE_KEY':
+      return {...state, key: action.key}
+    case 'SEARCH_KEY_UPDATE_TYPE':
+      return {...state, type: action.searchType}
+    case 'SEARCH_KET_UPDATE_VENDOR':
+      return {...state, vendor: action.vendor}
+    default:
+      return state;
+  }
+}
 
 const initPlaylist = [
   {
@@ -74,12 +92,17 @@ const playlist = (state = initPlaylist, action) => {
   }
 }
 
-const config = (state = {barStyle: 'light-content'}, action) => {
+const appStatus = (state = {barStyle: 'light-content', playing: false}, action) => {
   switch (action.type) {
     case 'CHANGE_STATUS_BAR':
       return {
         ...state,
         barStyle: action.style
+      }
+    case 'CHANGE_PLAYING_STATUS':
+      return {
+        ...state,
+        playing: action.playing
       }
     default:
       return state;
@@ -89,6 +112,5 @@ const config = (state = {barStyle: 'light-content'}, action) => {
 export default combineReducers({
   playlist,
   searchKey,
-  searchResult,
-  config,
+  appStatus,
 })

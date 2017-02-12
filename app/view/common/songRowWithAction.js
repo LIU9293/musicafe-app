@@ -49,11 +49,11 @@ class SongRowWithAction extends Component{
     }
     this.props.updateCurrentPlaylist(data, this.props.id);
     //this.props.navigator.jumpTo(this.props.navigator.getCurrentRoutes()[0]);
-    this.props.navigator.push({
+    this.props.PlayerRouter.push({
       ident: 'Player',
       playNow: true,
       sceneConfig: {
-        ...Navigator.SceneConfigs.PushFromRight,
+        ...Navigator.SceneConfigs.FloatFromBottom,
         gestures: {jumpBack: Navigator.SceneConfigs.PushFromRight.gestures.pop}
       }
     });

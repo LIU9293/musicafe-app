@@ -63,6 +63,14 @@ class Player extends Component{
     });
   }
 
+  componentDidMount(){
+    this.props.changePlayStatus(true);
+  }
+
+  componentWillUnmount(){
+    this.props.changePlayStatus(false);
+  }
+
   getSongInfoFromList(){
     const { songlist } = this.state;
     const { defaultSongID } = this.props;
@@ -92,8 +100,6 @@ class Player extends Component{
       this.getSongURL(song)
         .then(currentSong => {
           let nextSong = this.getNextSong();
-          console.log('now state is : ', this.state);
-          console.log('initial next song is : ', nextSong);
           this.getNextSongURL(nextSong);
         })
         .catch(err => {
@@ -109,7 +115,6 @@ class Player extends Component{
     return new Promise((resolve, reject) => {
       api.getSongURL(vendor, id, albumID)
         .then(url => {
-          console.log('initial play url is: ', url);
           this.setState({
             url,
           }, () => {
@@ -130,8 +135,8 @@ class Player extends Component{
     if(!this.state.loaded){
       return;
     }
-    this.isDragging = false;
     this.audioPlayer.seek(e);
+    this.isDragging = false;
   }
 
   onLoad(e){
@@ -195,8 +200,6 @@ class Player extends Component{
             url,
           },
           loaded: true,
-        }, () => {
-          console.log('after set the next song`s info, the state now is: ', this.state);
         });
       })
       .catch(err => {
@@ -208,7 +211,6 @@ class Player extends Component{
   }
 
   onEnd(){
-    console.log('--- JS code --- the player on end ---');
     const { nextSong } = this.state;
     this.setState({
       loaded: false,
@@ -267,13 +269,14 @@ class Player extends Component{
                   repeat={false}
                   playInBackground={true}
                   playWhenInactive={true}
+                  progressUpdateInterval={1000}
                 />
     }
     return(
       <Wapper>
         { video || null }
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={e => this.props.navigator.jumpBack()}>
+          <TouchableOpacity style={styles.backButton} onPress={e => this.props.PlayerRouter.jumpBack()}>
             <Icon name="ios-arrow-back" size={26} color={oc.gray1} />
           </TouchableOpacity>
         </View>
@@ -447,4 +450,12 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(Player)
+const mapDispatchToProps = (dispatch) => {
+  return {
+    changePlayStatus: (playing) => {
+      dispatch({type: 'CHANGE_PLAYING_STATUS', playing})
+    }
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Player)

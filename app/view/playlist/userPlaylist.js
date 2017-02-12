@@ -43,7 +43,7 @@ class UserPlaylist extends Component{
           overlayStyle={{ backgroundColor: 'transparent'}}
           source={ cover }
         >
-          <BlurView blurType="dark" blurAmount={10} style={styles.blur}>
+          <BlurView blurType="dark" blurAmount={15} style={styles.blur}>
             <TouchableOpacity style={styles.blur} onPress={e => this.pushNext(list)}>
               <Text style={styles.text}>{list.name}</Text>
             </TouchableOpacity>

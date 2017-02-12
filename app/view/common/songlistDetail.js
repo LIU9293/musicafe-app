@@ -4,6 +4,7 @@
 import React, { Component } from 'react';
 import { View, Text, ScrollView, InteractionManager,
   Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { connect } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SongRowWithAction from 'SongRowWithAction';
 import { size } from 'lib';
@@ -12,6 +13,8 @@ import Navbar from 'navbar';
 import Wapper from 'wapper';
 import oc from 'oc';
 import Loading from 'Loading';
+
+const GIF = require('../../assets/images/wave.gif');
 
 class SonglistDetail extends Component{
 
@@ -55,6 +58,7 @@ class SonglistDetail extends Component{
             cover={this.props.cover}
             fromType={this.props.type}
             listData={this.state.listData.songList}
+            PlayerRouter={this.props.PlayerRouter}
           />
         )
       })
@@ -63,6 +67,12 @@ class SonglistDetail extends Component{
       <Wapper style={{backgroundColor: oc.black}}>
         <Navbar
           left={<Icon name="ios-arrow-back" size={24} style={{color: oc.gray1}} />}
+          right={
+            this.props.playing
+            ? <Image source={GIF} style={{width: 15, height: 15}} />
+            : null
+          }
+          onRight={(e) => {this.props.PlayerRouter.jumpForward()}}
           middle={<Text numberOfLines={1} style={{color: oc.gray1}}>{this.props.name}</Text>}
           onLeft={(e) => {this.props.navigator.pop()}}
         />
@@ -134,4 +144,10 @@ const styles = StyleSheet.create({
   }
 });
 
-export default SonglistDetail
+const mapStateToProps = (state) => {
+  return {
+    playing: state.appStatus.playing
+  }
+}
+
+export default connect(mapStateToProps)(SonglistDetail)
