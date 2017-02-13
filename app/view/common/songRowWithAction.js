@@ -36,7 +36,7 @@ class SongRowWithAction extends Component{
         vendor: this.props.vendor,
       }
     });
-    if(!data.album){
+    if(data[0] && !data[0].album){
       data = data.map(item => {
         return {
           ...item,
@@ -54,7 +54,7 @@ class SongRowWithAction extends Component{
       playNow: true,
       sceneConfig: {
         ...Navigator.SceneConfigs.FloatFromBottom,
-        gestures: {jumpBack: Navigator.SceneConfigs.PushFromRight.gestures.pop}
+        gestures: {jumpBack: Navigator.SceneConfigs.FloatFromBottom.gestures.pop}
       }
     });
   }

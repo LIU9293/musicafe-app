@@ -3,8 +3,8 @@
  */
 
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Slider, TouchableOpacity, Image,
-   Alert, InteractionManager } from 'react-native';
+import { View, Text, StyleSheet, Slider, TouchableOpacity, InteractionManager,
+  Image, Alert } from 'react-native';
 import Video from 'react-native-video';
 import oc from 'oc';
 import api from 'api';
@@ -45,6 +45,7 @@ class Player extends Component{
     this.dragSlider = this.dragSlider.bind(this);
     this.getNextSong = this.getNextSong.bind(this);
     this.getNextSongURL = this.getNextSongURL.bind(this);
+    this.manuallySetNextSong = this.manuallySetNextSong.bind(this);
   }
 
   componentWillReceiveProps(nextProps){
@@ -149,7 +150,10 @@ class Player extends Component{
 
   setTime(e){
     if(!this.isDragging){
-      this.setState({currentPosition: parseInt(e.currentTime)});
+      this.setState({
+        currentPosition: parseInt(e.currentTime),
+        songLength: e.playableDuration
+      });
     }
   }
 
@@ -213,21 +217,33 @@ class Player extends Component{
   onEnd(){
     const { nextSong } = this.state;
     this.setState({
-      loaded: false,
       songLength: 1,
       currentPosition: 0,
+      cover: nextSong.album.cover || nextSong.cover,
+      name: nextSong.name,
+      artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+      vendor: nextSong.vendor,
+      id: nextSong.id,
     }, () => {
-      this.setState({
-        cover: nextSong.album.cover || nextSong.cover,
-        name: nextSong.name,
-        artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
-        vendor: nextSong.vendor,
-        id: nextSong.id,
-        url: nextSong.url,
-      }, () => {
-        let nextNextSong = this.getNextSong();
-        this.getNextSongURL(nextNextSong);
-      });
+      let nextNextSong = this.getNextSong();
+      this.getNextSongURL(nextNextSong);
+    });
+  }
+
+  manuallySetNextSong(){
+    const { nextSong } = this.state;
+    this.setState({
+      songLength: 1,
+      currentPosition: 0,
+      cover: nextSong.album.cover || nextSong.cover,
+      name: nextSong.name,
+      artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+      vendor: nextSong.vendor,
+      id: nextSong.id,
+      url: nextSong.url
+    }, () => {
+      let nextNextSong = this.getNextSong();
+      this.getNextSongURL(nextNextSong);
     });
   }
 
@@ -277,7 +293,7 @@ class Player extends Component{
         { video || null }
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={e => this.props.PlayerRouter.jumpBack()}>
-            <Icon name="ios-arrow-back" size={26} color={oc.gray1} />
+            <Icon name="ios-arrow-down" size={26} color={oc.gray1} />
           </TouchableOpacity>
         </View>
         <View style={styles.imageContainer}>
@@ -348,7 +364,7 @@ class Player extends Component{
               : <Icon name="ios-play" style={styles.icon} size={50} />
             }
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={e => this.onEnd()}>
+          <TouchableOpacity style={styles.button} onPress={e => this.manuallySetNextSong()}>
             <Icon name="ios-skip-forward" style={styles.icon} size={34} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={this.mute}>

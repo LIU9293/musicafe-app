@@ -71,7 +71,7 @@ class UserPlaylistDetail extends Component{
       playNow: true,
       sceneConfig: {
         ...Navigator.SceneConfigs.FloatFromBottom,
-        gestures: {jumpBack: Navigator.SceneConfigs.PushFromRight.gestures.pop}
+        gestures: {jumpBack: Navigator.SceneConfigs.FloatFromBottom.gestures.pop}
       }
     });
   }

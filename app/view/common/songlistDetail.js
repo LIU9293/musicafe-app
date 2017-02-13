@@ -41,7 +41,6 @@ class SonglistDetail extends Component{
   render(){
     let lists;
     if(this.state.loaded){
-      console.log(this.state.listData);
       lists = this.state.listData.songList.map((song, index) => {
         return(
           <SongRowWithAction
@@ -56,7 +55,7 @@ class SonglistDetail extends Component{
             vendor={this.props.vendor}
             artist={song.artists.map(i => i.name).join(' & ')}
             albumID={this.props.type === 'album' ? this.props.id : song.album.id}
-            cover={song.album.cover || this.props.cover}
+            cover={this.props.type === 'album' ? this.props.cover : song.album.cover}
             fromType={this.props.type}
             listData={this.state.listData.songList}
             PlayerRouter={this.props.PlayerRouter}
