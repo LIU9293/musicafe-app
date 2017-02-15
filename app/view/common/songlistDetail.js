@@ -3,18 +3,18 @@
  */
 import React, { Component } from 'react';
 import { View, Text, ScrollView, InteractionManager,
-  Image, StyleSheet, TouchableOpacity } from 'react-native';
+  Image, StyleSheet, TouchableOpacity, Navigator } from 'react-native';
 import { connect } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SongRowWithAction from 'SongRowWithAction';
-import { size } from 'lib';
+import { size, jumpForward } from 'lib';
 import api from 'api';
 import Navbar from 'navbar';
 import Wapper from 'wapper';
 import oc from 'oc';
 import Loading from 'Loading';
-
-const GIF = require('../../assets/images/wave.gif');
+import MusicIcon from 'MusicIcon';
+import PrimaryButton from 'PrimaryButton';
 
 class SonglistDetail extends Component{
 
@@ -24,6 +24,7 @@ class SonglistDetail extends Component{
       loaded: false,
       listData: null,
     }
+    this.playAll = this.playAll.bind(this);
   }
 
   componentDidMount(){
@@ -36,6 +37,35 @@ class SonglistDetail extends Component{
           console.log(err);
         })
     })
+  }
+
+  playAll(e){
+    let data = this.state.listData.songList.map(item => {
+      return {
+        ...item,
+        vendor: this.props.vendor,
+      }
+    });
+    if(this.props.type === 'album'){
+      data = data.map(item => {
+        return {
+          ...item,
+          album: {
+            id: this.props.id,
+            cover: this.props.cover
+          }
+        }
+      })
+    }
+    this.props.updateCurrentPlaylist(data);
+    this.props.PlayerRouter.push({
+      ident: 'Player',
+      playNow: true,
+      sceneConfig: {
+        ...Navigator.SceneConfigs.FloatFromBottom,
+        gestures: {jumpBack: Navigator.SceneConfigs.FloatFromBottom.gestures.pop}
+      }
+    });
   }
 
   render(){
@@ -67,12 +97,8 @@ class SonglistDetail extends Component{
       <Wapper style={{backgroundColor: oc.black}}>
         <Navbar
           left={<Icon name="ios-arrow-back" size={24} style={{color: oc.gray1}} />}
-          right={
-            this.props.playing
-            ? <Image source={GIF} style={{width: 15, height: 15}} />
-            : null
-          }
-          onRight={(e) => {this.props.PlayerRouter.jumpForward()}}
+          right={<MusicIcon />}
+          onRight={(e) => {jumpForward(this.props.PlayerRouter)}}
           middle={<Text numberOfLines={1} style={{color: oc.gray1}}>{this.props.name}</Text>}
           onLeft={(e) => {this.props.navigator.pop()}}
         />
@@ -80,11 +106,14 @@ class SonglistDetail extends Component{
           <View style={styles.header}>
             <Image source={{uri: this.props.cover}} style={styles.cover}/>
             <View style={styles.description}>
-              <View style={{marginLeft: 10}}>
+              <View style={{marginLeft: 20}}>
                 <Text style={{fontSize: 17, color: oc.gray1}}>{this.props.name}</Text>
                 <Text style={{fontSize: 12, marginTop: 15,  color: oc.gray3}}>
                   {this.props.artist}
                 </Text>
+              </View>
+              <View style={{marginLeft: 20}}>
+                <PrimaryButton text={'全部播放'} onPress={this.playAll} />
               </View>
             </View>
           </View>
@@ -107,13 +136,12 @@ const styles = StyleSheet.create({
   description: {
     flex: 1,
     flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   cover: {
     height: 150,
     width: 150,
-  },
-  description: {
-    flex: 1,
   },
   scroll: {
     position: 'absolute',
@@ -150,4 +178,12 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(SonglistDetail)
+const mapDispatchToProps = (dispatch) => {
+  return{
+    updateCurrentPlaylist: (list, songID) => {
+      dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID})
+    },
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(SonglistDetail)

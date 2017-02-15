@@ -2,8 +2,9 @@
 /*
  * @providesModule lib
  */
-
-import { PixelRatio, Dimensions, Platform } from 'react-native';
+import react, {Component} from 'react';
+import oc from 'oc';
+import { PixelRatio, Dimensions, Platform, View } from 'react-native';
 
 export const size = {
   width: Dimensions.get('window').width,
@@ -13,3 +14,11 @@ export const size = {
 export const ratio = PixelRatio.get();
 
 export const os = Platform.OS;
+
+export const jumpForward = (route) => {
+  try{
+    route.jumpForward()
+  } catch(e){
+    console.log(e);
+  }
+}

@@ -9,6 +9,8 @@ import Discover from 'discover';
 import Search from 'search';
 import Playlist from 'Playlist';
 import oc from 'oc';
+const RNFS = require('react-native-fs');
+const root = `${RNFS.DocumentDirectoryPath}/musicafe/`;
 
 class TabView extends Component{
   constructor(props){
@@ -21,13 +23,40 @@ class TabView extends Component{
   async componentWillMount(){
     try {
       let playlist = await AsyncStorage.getItem('playlist');
+      let asyncDataString = await AsyncStorage.getItem('download');
+      let folderData = await RNFS.readDir(root);
       if(playlist){
         this.props.updatePlaylistFromStorage(JSON.parse(playlist));
       }
+      if(folderData && folderData.length > 0){
+        let verifiedDownloadData = this.verifyDownloadData(JSON.parse(asyncDataString), folderData);
+        this.props.updateDownloadDataStorage(verifiedDownloadData);
+      }
     } catch (e) {
       console.log(e);
-      Alert.alert('async storage出错 😯');
+      Alert.alert('存储出错 😯');
     }
+  }
+
+  verifyDownloadData(asyncData, folderData){
+    let allFolderSongNames = [...folderData].map(i => i.name);
+    let verifiedDataArray = allFolderSongNames.map((fileName, index) => {
+      if(asyncData[fileName.split('.')[0]]){
+        return {
+          ...asyncData[fileName.split('.')[0]],
+          filePath: 'file://' + folderData.filter(i => i.name === fileName)[0].path
+        }
+      } else {
+        return -1;
+      }
+    });
+    verifiedDataArray = verifiedDataArray.filter(i => i !== -1);
+    let newObj = {};
+    for(let i=0; i<verifiedDataArray.length; i++){
+      let key = verifiedDataArray[i].fileName.split('.')[0];
+      newObj[key] = verifiedDataArray[i];
+    }
+    return newObj;
   }
 
   render(){
@@ -51,7 +80,7 @@ class TabView extends Component{
             onPress={e => this.setState({tab: 'home'})}
             systemIcon={'featured'}
           >
-            <Discover navigator = {this.props.navigator} />
+            <Discover navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
           </TabBarIOS.Item>
           <TabBarIOS.Item
             selected={this.state.tab === "search"}
@@ -60,7 +89,7 @@ class TabView extends Component{
             onPress={e => this.setState({tab: 'search'})}
             systemIcon={'search'}
           >
-            <Search navigator = {this.props.navigator} />
+            <Search navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
           </TabBarIOS.Item>
           <TabBarIOS.Item
             selected={this.state.tab === "playlist"}
@@ -69,7 +98,7 @@ class TabView extends Component{
             onPress={e => this.setState({tab: 'playlist'})}
             systemIcon={'bookmarks'}
           >
-            <Playlist navigator = {this.props.navigator} />
+            <Playlist navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
           </TabBarIOS.Item>
         </TabBarIOS>
       </View>
@@ -87,7 +116,10 @@ const mapDispatchToProps =(dispatch) => {
   return{
     updatePlaylistFromStorage: (playlist) => {
       dispatch({type: 'INIT_PLAYLIST', playlist});
-    }
+    },
+    updateDownloadDataStorage: (data) => {
+      dispatch({type: 'INIT_DOWNLOADED_SONG', data});
+    },
   }
 }
 

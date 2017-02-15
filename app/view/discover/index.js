@@ -8,6 +8,8 @@ const { BlurView } = require('react-native-blur');
 import oc from 'oc';
 import Wapper from 'wapper';
 import Loading from 'Loading';
+import MusicIcon from 'MusicIcon';
+import { jumpForward } from 'lib';
 
 class Discover extends Component{
   constructor(props){
@@ -18,6 +20,7 @@ class Discover extends Component{
       loaded: false,
     }
     this.pushToDetail = this.pushToDetail.bind(this);
+    this.JumpToPlayer = this.JumpToPlayer.bind(this);
   }
 
   componentWillMount(){
@@ -33,6 +36,10 @@ class Discover extends Component{
       .catch(err => {
         console.log(err);
       })
+  }
+
+  JumpToPlayer(){
+    jumpForward(this.props.PlayerRouter);
   }
 
   pushToDetail(props){
@@ -95,7 +102,12 @@ class Discover extends Component{
       return(
         <Wapper style={{backgroundColor: oc.black, paddingBottom: 50}}>
           <ScrollView style={{flex: 1, backgroundColor: oc.black}}>
-            <Text style={styles.title}>推荐专辑</Text>
+            <View style={{justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-end'}}>
+              <Text style={styles.title}>推荐专辑</Text>
+              <TouchableOpacity onPress={this.JumpToPlayer} style={styles.musicIcon}>
+                <MusicIcon />
+              </TouchableOpacity>
+            </View>
             <ScrollView
               horizontal={true}
               showsHorizontalScrollIndicator={false}
@@ -154,6 +166,13 @@ const styles = StyleSheet.create({
   },
   artist: {
     color: oc.gray5,
+  },
+  musicIcon: {
+    width: 50,
+    height: 50,
+    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 })
 

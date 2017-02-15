@@ -5,6 +5,7 @@ import React, { Component } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { size, os } from 'lib';
+import oc from 'oc';
 const { BlurView } = require('react-native-blur');
 
 class Navbar extends Component {
@@ -12,15 +13,15 @@ class Navbar extends Component {
     return(
       <View style={[styles.container, this.props.style]}>
         <BlurView blurType="light" blurAmount={25} style={styles.blur}>
-          <View style={[styles.left, {backgroundColor: this.props.backgroundColor || 'rgba(50, 50, 55, 0.6)'}]} >
+          <View style={[styles.left, {backgroundColor: this.props.backgroundColor}]} >
             <TouchableOpacity style={styles.button} onPress={e => this.props.onLeft(e)}>
               {this.props.left || null}
             </TouchableOpacity>
           </View>
-          <View style={[styles.middle, {backgroundColor: this.props.backgroundColor || 'rgba(50, 50, 55, 0.6)'}]}>
+          <View style={[styles.middle, {backgroundColor: this.props.backgroundColor}]}>
             {this.props.middle || null}
           </View>
-          <View style={[styles.right, {backgroundColor: this.props.backgroundColor || 'rgba(50, 50, 55, 0.6)'}]} >
+          <View style={[styles.right, {backgroundColor: this.props.backgroundColor}]} >
             <TouchableOpacity style={styles.button} onPress={e => this.props.onRight(e)}>
               {this.props.right || null}
             </TouchableOpacity>
@@ -37,7 +38,7 @@ Navbar.defaultProps = {
   right: null,
   onLeft: () => {},
   onRight: () => {},
-  backgroundColor: 'rgba(10, 10, 12, 0.9)',
+  backgroundColor: oc.black,
 }
 
 const styles = StyleSheet.create({

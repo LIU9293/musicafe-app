@@ -3,11 +3,13 @@
  */
 import React, { Component } from 'react';
 import oc from 'oc';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import Wapper from 'wapper';
 import { Kohana } from 'react-native-textinput-effects';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Ratio from 'ratio';
+import MusicIcon from 'MusicIcon';
+import { jumpForward } from 'lib';
 
 class Search extends Component{
 
@@ -22,6 +24,7 @@ class Search extends Component{
     this.changeSearchType = this.changeSearchType.bind(this);
     this.changeText = this.changeText.bind(this);
     this.submit = this.submit.bind(this);
+    this.jump = this.jump.bind(this);
   }
 
   changeSearchType(type){
@@ -56,48 +59,57 @@ class Search extends Component{
     this.props.navigator.push(route);
   }
 
+  jump(e){
+    jumpForward(this.props.PlayerRouter);
+  }
+
   render(){
     return(
-      <ScrollView
-        keyboardDismissMode='on-drag'
-        showsVerticalScrollIndicator={false}
-        style={styles.container}
-        contentContainerStyle={styles.contentStyle}
-      >
-        <View style={styles.textInput}>
-          <Kohana
-            onSubmitEditing={this.submit}
-            returnKeyType={'search'}
-            blurOnSubmit={true}
-            onChangeText={this.changeText}
-            style={{backgroundColor: 'transparent'}}
-            label={'你想听什么？'}
-            iconClass={Icon}
-            iconName={'ios-musical-note'}
-            iconColor={oc.gray1}
-            labelStyle={{ color: oc.gray1 }}
-            inputStyle={{ color: oc.gray1 }}
+      <Wapper>
+        <ScrollView
+          keyboardDismissMode='on-drag'
+          showsVerticalScrollIndicator={false}
+          style={styles.container}
+          contentContainerStyle={styles.contentStyle}
+        >
+          <View style={styles.textInput}>
+            <Kohana
+              onSubmitEditing={this.submit}
+              returnKeyType={'search'}
+              blurOnSubmit={true}
+              onChangeText={this.changeText}
+              style={{backgroundColor: 'transparent'}}
+              label={'你想听什么？'}
+              iconClass={Icon}
+              iconName={'ios-musical-note'}
+              iconColor={oc.gray1}
+              labelStyle={{ color: oc.gray1 }}
+              inputStyle={{ color: oc.gray1 }}
+            />
+          </View>
+          <Ratio
+            onPress={e => this.changeSearchType('song')}
+            checked={this.state.song}
+            style={{marginTop: 30}}
+            text={'song'}
           />
-        </View>
-        <Ratio
-          onPress={e => this.changeSearchType('song')}
-          checked={this.state.song}
-          style={{marginTop: 30}}
-          text={'song'}
-        />
-        <Ratio
-          onPress={e => this.changeSearchType('album')}
-          checked={this.state.album}
-          style={{marginTop: 30}}
-          text={'album'}
-        />
-        <Ratio
-          onPress={e => this.changeSearchType('playlist')}
-          checked={this.state.playlist}
-          style={{marginTop: 30}}
-          text={'playlist'}
-        />
-      </ScrollView>
+          <Ratio
+            onPress={e => this.changeSearchType('album')}
+            checked={this.state.album}
+            style={{marginTop: 30}}
+            text={'album'}
+          />
+          <Ratio
+            onPress={e => this.changeSearchType('playlist')}
+            checked={this.state.playlist}
+            style={{marginTop: 30}}
+            text={'playlist'}
+          />
+        </ScrollView>
+        <TouchableOpacity onPress={this.jump} style={styles.musicIcon}>
+          <MusicIcon />
+        </TouchableOpacity>
+      </Wapper>
     )
   }
 }
@@ -119,6 +131,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: oc.gray1,
     marginTop: 100,
+  },
+  musicIcon: {
+    width: 50,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 20,
+    right: 0,
+    zIndex: 999,
   }
 })
 

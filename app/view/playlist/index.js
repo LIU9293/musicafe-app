@@ -9,19 +9,18 @@ import UserDownload from './userDownload';
 import HeaderTabBar from 'HeaderTabBar';
 import oc from 'oc';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { jumpForward } from 'lib';
+import MusicIcon from 'MusicIcon';
 
 class SearchDetail extends Component{
 
   constructor(props){
     super(props);
-    this.addList = this.addList.bind(this);
+    this.jump = this.jump.bind(this);
   }
 
-  addList(){
-    this.props.navigator.push({
-      ident: 'AddPlaylist',
-      sceneConfig: Navigator.SceneConfigs.FloatFromBottom,
-    });
+  jump(e){
+    jumpForward(this.props.PlayerRouter);
   }
 
   render(){
@@ -31,21 +30,23 @@ class SearchDetail extends Component{
          <HeaderTabBar
            navigator = {this.props.navigator}
            right={
-                   <TouchableOpacity style={styles.addButton} onPress={this.addList}>
-                     <Icon name="ios-add" size={30} color={oc.gray1} />
+                   <TouchableOpacity style={styles.addButton} onPress={this.jump}>
+                     <MusicIcon />
                    </TouchableOpacity>
                  }
          />
        )}
-       style={{paddingTop: 20, backgroundColor: oc.black}}
+       style={{paddingTop: 20, backgroundColor: oc.black, marginBottom: 50}}
      >
        <UserPlaylist
          tabLabel="歌单"
          navigator={this.props.navigator}
+         PlayerRouter={this.props.PlayerRouter}
        />
        <UserDownload
          tabLabel="下载"
          navigator={this.props.navigator}
+         PlayerRouter={this.props.PlayerRouter}
        />
      </ScrollableTabView>
    )

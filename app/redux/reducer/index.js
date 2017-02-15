@@ -92,7 +92,10 @@ const playlist = (state = initPlaylist, action) => {
   }
 }
 
-const appStatus = (state = {barStyle: 'light-content', playing: false}, action) => {
+//playing : 1  - no song ever played
+//          2  - has song in player
+//          3  - playing
+const appStatus = (state = {barStyle: 'light-content', playing: 1}, action) => {
   switch (action.type) {
     case 'CHANGE_STATUS_BAR':
       return {
@@ -109,8 +112,29 @@ const appStatus = (state = {barStyle: 'light-content', playing: false}, action) 
   }
 }
 
+const downloadedSong = (state = {}, action) => {
+  switch (action.type) {
+    case 'INIT_DOWNLOADED_SONG':
+      return {
+        ...action.data
+      }
+    case 'ADD_DOWNLOADED_SONG':
+      return {
+        ...state,
+        [action.uiqID]: action.songData
+      }
+    case 'DELETE_DOWNLOADED_SONG':
+      let newState = {...state};
+      delete newState[action.uiqID];
+      return newState;
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   playlist,
   searchKey,
   appStatus,
+  downloadedSong
 })

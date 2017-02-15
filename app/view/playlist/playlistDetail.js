@@ -12,7 +12,8 @@ import { size } from 'lib';
 import Navbar from 'navbar';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SwipeListView } from 'react-native-swipe-list-view';
-const GIF = require('../../assets/images/wave.gif');
+import MusicIcon from 'MusicIcon';
+import { jumpForward } from 'lib';
 
 class UserPlaylistDetail extends Component{
 
@@ -56,7 +57,7 @@ class UserPlaylistDetail extends Component{
     }
   }
 
-  pushToPlayer(index){
+  pushToPlayer(songID){
     let newData = [...this.state.data].map(item => {
       if(!item.artist){
         return {
@@ -65,7 +66,7 @@ class UserPlaylistDetail extends Component{
         }
       }
     });
-    this.props.updateCurrentPlaylist(newData, this.state.data[index].id);
+    this.props.updateCurrentPlaylist(newData, songID);
     this.props.PlayerRouter.push({
       ident: 'Player',
       playNow: true,
@@ -78,15 +79,33 @@ class UserPlaylistDetail extends Component{
 
   renderSongs(data, id, id2){
     id2 = parseInt(id2);
+
+    //if is downloaded, give a tag
+    let { vendor } = data;
+    let songID = data.id;
+    let { downloadedSong } = this.props;
+    let isDownloaded = false;
+    let tag = 0;
+    if(vendor === 'xiami'){tag = 1}
+    if(vendor === 'qq'){tag = 2}
+    if(vendor === 'netease'){tag = 3}
+    if(Object.keys(downloadedSong).indexOf(`${tag}${songID}`) > -1){
+      isDownloaded = true;
+    }
     return(
-      <TouchableHighlight style={[styles.row, {
-          borderTopColor: id2 === 0 ? oc.black : oc.gray7
-        }]}
-        onPress={e => this.pushToPlayer(id2)}
+      <TouchableHighlight style={{borderTopColor: id2 === 0 ? oc.black : oc.gray7}}
+        onPress={e => this.pushToPlayer(songID)}
       >
-        <Text style={styles.text}>
-          {`${id2+1}. ${data.name} - ${data.artists.map(i => i.name).join('&')}`}
-        </Text>
+        <View style={styles.row}>
+          <Text style={styles.text}>
+            {`${id2+1}. ${data.name} - ${data.artists.map(i => i.name).join('&')}`}
+          </Text>
+          {
+            isDownloaded
+            ? <View style={{backgroundColor: oc.teal6, height: 8, width: 8, borderRadius: 4, marginLeft: 10}} />
+            : null
+          }
+        </View>
       </TouchableHighlight>
     )
   }
@@ -106,12 +125,8 @@ class UserPlaylistDetail extends Component{
          left={<Icon name="ios-arrow-back" size={24} style={{color: oc.gray1}} />}
          middle={<Text numberOfLines={1} style={{color: oc.gray1}}>{this.props.name}</Text>}
          onLeft={(e) => {this.props.navigator.pop()}}
-         right={
-           this.props.playing
-           ? <Image source={GIF} style={{width: 15, height: 15}} />
-           : null
-         }
-         onRight={(e) => {this.props.PlayerRouter.jumpForward()}}
+         right={<MusicIcon />}
+         onRight={(e) => {jumpForward(this.props.PlayerRouter)}}
         />
         <SwipeListView
             dataSource={this.state.dataSource}
@@ -156,7 +171,7 @@ const styles = StyleSheet.create({
 const mapStateToProps = (state) => {
   return{
     playlist: state.playlist,
-    playing: state.appStatus.playing
+    downloadedSong: state.downloadedSong
   }
 }
 

@@ -7,9 +7,12 @@ import { View, Text, ScrollView, Image, StyleSheet, Navigator,
 import Icon from 'react-native-vector-icons/Ionicons';
 import { size } from 'lib';
 import oc from 'oc';
+import api from 'api';
 const { BlurView } = require('react-native-blur');
 import ModalButton from 'ModalButton';
 import { connect } from 'react-redux';
+const RNFS = require('react-native-fs');
+const root = `${RNFS.DocumentDirectoryPath}/musicafe/`;
 
 class SongRowWithAction extends Component{
   constructor(props){
@@ -48,7 +51,6 @@ class SongRowWithAction extends Component{
       })
     }
     this.props.updateCurrentPlaylist(data, this.props.id);
-    //this.props.navigator.jumpTo(this.props.navigator.getCurrentRoutes()[0]);
     this.props.PlayerRouter.push({
       ident: 'Player',
       playNow: true,
@@ -95,8 +97,85 @@ class SongRowWithAction extends Component{
     }
   }
 
-  download(){
-
+  download(e){
+    let {songData, fromType, cover, vendor, id, albumID} = this.props;
+    if(fromType === 'album'){
+      songData = {
+        ...songData,
+        album: {cover: cover, id: albumID}
+      }
+    }
+    this.setState({
+      modal: false,
+      step: 1,
+    });
+    RNFS.stat(root)
+      .then(res => {
+        console.log('stat dir: ', res);
+      })
+      .catch(err => {
+        RNFS.mkdir(root);
+        console.log(err);
+      })
+    api.getSongURL(vendor, id, albumID)
+      .then(url => {
+        //set a tag for each vendor, name cannot be complex due to this issue:
+        //https://github.com/react-native-community/react-native-video/issues/213
+        let tag = 0;
+        if(vendor === 'xiami'){tag = 1}
+        if(vendor === 'qq'){tag = 2}
+        if(vendor === 'netease'){tag = 3}
+        let downloadDest = `${root}${tag}${id}.mp3`;
+        const ret = RNFS.downloadFile({
+          fromUrl: url,
+          toFile: downloadDest,
+          begin: res => console.log(res),
+          progress: res => console.log(res),
+          background: true,
+          progressDivider: 1
+        });
+        let jobId = ret.jobId;
+        console.log(`job id: ${jobId}`);
+        ret.promise
+          .then(res => {
+            console.log(`output: ${JSON.stringify(res)}`);
+            console.log(`output file is: file://${downloadDest}`);
+            jobId = -1;
+            let newSongData = {
+              ...songData,
+              vendor: this.props.vendor,
+              filePath: `file://${downloadDest}`,
+              fileName: `${tag}${id}.mp3`,
+              fileSize: res.bytesWritten,
+            };
+            this.props.addDownloadSong(`${tag}${id}`, newSongData);
+            try {
+              AsyncStorage.getItem('download')
+                .then(data => {
+                  let jsonData = JSON.parse(data);
+                  jsonData[`${tag}${id}`] = newSongData;
+                  AsyncStorage.setItem(`download`, JSON.stringify(jsonData));
+                })
+                .catch(err => {
+                  //no data yet
+                  let key = `${tag}${id}`;
+                  let initData = {};
+                  initData[key] = newSongData;
+                  AsyncStorage.setItem(`download`, JSON.stringify(initData));
+                })
+            } catch (error) {
+              throw 'AsyncStorage error';
+            }
+          })
+          .catch(err => {
+            jobId = -1;
+            throw 'download error';
+          });
+      })
+      .catch(e => {
+        console.log(e);
+        Alert.alert(e);
+      })
   }
 
   renderModal(){
@@ -235,6 +314,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     updateCurrentPlaylist: (list, songID) => {
       dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID})
+    },
+    addDownloadSong: (uiqID, songData) => {
+      dispatch({type: 'ADD_DOWNLOADED_SONG', uiqID, songData})
     }
   }
 }

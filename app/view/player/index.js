@@ -12,6 +12,7 @@ import Wapper from 'wapper';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { size } from 'lib';
 import { connect } from 'react-redux';
+import MusicControl from 'react-native-music-control';
 const { height, width } = size;
 
 class Player extends Component{
@@ -46,6 +47,7 @@ class Player extends Component{
     this.getNextSong = this.getNextSong.bind(this);
     this.getNextSongURL = this.getNextSongURL.bind(this);
     this.manuallySetNextSong = this.manuallySetNextSong.bind(this);
+    this.setupController = this.setupController.bind(this);
   }
 
   componentWillReceiveProps(nextProps){
@@ -64,12 +66,57 @@ class Player extends Component{
       this.setState({ songlist: this.props.currentList }, () => {
         this.getSongInfoFromList();
       });
-      this.props.changePlayStatus(true);
+      this.props.changePlayStatus(3);
+    });
+    this.setupController(false);
+    MusicControl.enableBackgroundMode(true);
+    MusicControl.on('play', ()=> {
+      if(this.state.playing){
+        return
+      }
+      this.PlayOrPause();
+      this.setupController(true);
+    })
+    MusicControl.on('pause', ()=> {
+      if(this.state.playing){
+        this.PlayOrPause();
+      }
+      this.setupController(false);
+    })
+    MusicControl.on('nextTrack', () => {
+      this.manuallySetNextSong();
+    });
+    MusicControl.on('skipBackward', () => {
+      if(this.state.currentPosition < 15){
+        this.setSongPosition(0);
+      } else {
+        this.setSongPosition(this.state.currentPosition - 15);
+      }
     });
   }
 
   componentWillUnmount(){
-    this.props.changePlayStatus(false);
+    this.props.changePlayStatus(1);
+    MusicControl.resetNowPlaying();
+  }
+
+  setupController(playing){
+    MusicControl.setNowPlaying({
+      title: this.state.name,
+      artwork: this.state.cover, // URL or File path
+      artist: this.state.artist,
+      duration: parseInt(this.state.songLength), // (Seconds)
+      playbackRate: playing ? 1 : 0
+    });
+    this.setupRemoteControl();
+  }
+
+  setupRemoteControl(){
+    MusicControl.enableControl('play', true);
+    MusicControl.enableControl('pause', true);
+    MusicControl.enableControl('nextTrack', true);
+    MusicControl.enableControl('previousTrack', false);
+    MusicControl.enableControl('skipBackward', true, {interval: 15});
   }
 
   getSongInfoFromList(){
@@ -112,23 +159,49 @@ class Player extends Component{
   getSongURL(song){
     let { vendor, id } = song;
     let albumID = song.album.id;
+    let tag = 0;
+    if(vendor === 'xiami'){tag = 1}
+    if(vendor === 'qq'){tag = 2}
+    if(vendor === 'netease'){tag = 3}
     //this function will set the url state, which affect out audio player...
     return new Promise((resolve, reject) => {
-      api.getSongURL(vendor, id, albumID)
-        .then(url => {
-          this.setState({
-            url,
-          }, () => {
-            resolve(song);
-          });
-        })
-        .catch(err => {
-          reject(err);
+      if(song.filePath){
+        this.setState({
+          url: song.filePath
+        }, () => {
+          resolve(song);
         });
+      } else if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${id}`) > -1){
+        //check if the song has been downloaded
+        this.setState({
+          url: this.props.downloadedSong[`${tag}${id}`].filePath
+        }, () => {
+          resolve(song);
+        });
+      } else {
+        api.getSongURL(vendor, id, albumID)
+          .then(url => {
+            this.setState({
+              url,
+            }, () => {
+              resolve(song);
+            });
+          })
+          .catch(err => {
+            reject(err);
+          });
+      }
     });
   }
 
   PlayOrPause(){
+    if(this.state.playing){
+      this.props.changePlayStatus(2);
+      this.setupController(false);
+    } else {
+      this.props.changePlayStatus(3);
+      this.setupController(true)
+    }
     this.setState({playing: !this.state.playing});
   }
 
@@ -143,6 +216,7 @@ class Player extends Component{
   onLoad(e){
     // set the duration of the song
     let duration = e.duration;
+    this.setupController(this.state.playing);
     this.setState({
       songLength: duration
     });
@@ -152,8 +226,14 @@ class Player extends Component{
     if(!this.isDragging){
       this.setState({
         currentPosition: parseInt(e.currentTime),
-        songLength: e.playableDuration
       });
+      MusicControl.setNowPlaying({
+        title: this.state.name,
+        artwork: this.state.cover, // URL or File path
+        artist: this.state.artist,
+        duration: parseInt(this.state.songLength), // (Seconds)
+        elapsedPlaybackTime: parseInt(e.currentTime),
+      })
     }
   }
 
@@ -171,7 +251,11 @@ class Player extends Component{
     if(this.state.random){
       //get an new list, like the original one but do not have just ended song.
       let newList = [...songlist].filter(x => x.id !== this.state.id);
-      song = newList[Math.floor(Math.random()*newList.length)];
+      if(newList.length === 0){
+        song = newList[0];
+      } else {
+        song = newList[Math.floor(Math.random()*newList.length)];
+      }
     } else {
       //get next song in the list
       let currentIndex;
@@ -196,22 +280,48 @@ class Player extends Component{
   }
 
   getNextSongURL(song){
-    api.getSongURL(song.vendor, song.id, song.album.id)
-      .then(url => {
-        this.setState({
-          nextSong: {
-            ...song,
-            url,
-          },
-          loaded: true,
-        });
+    let { vendor, id } = song;
+    let albumID = song.album.id;
+    let tag = 0;
+    if(vendor === 'xiami'){tag = 1}
+    if(vendor === 'qq'){tag = 2}
+    if(vendor === 'netease'){tag = 3}
+    if(song.filePath){
+      this.setState({
+        nextSong: {
+          ...song,
+          url: song.filePath
+        },
+        loaded: true,
       })
-      .catch(err => {
-        Alert.alert('next song err T_T');
-        if(err === 'err paring xml , please check xiami SDK'){
-          this.onEnd();
-        }
+    } else if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${id}`) > -1){
+      //check if the song has been downloaded
+      this.setState({
+        nextSong: {
+          ...song,
+          url: this.props.downloadedSong[`${tag}${id}`].filePath
+        },
+        loaded: true,
       });
+    } else {
+      api.getSongURL(vendor, id, albumID)
+        .then(url => {
+          console.log(url);
+          this.setState({
+            nextSong: {
+              ...song,
+              url,
+            },
+            loaded: true,
+          });
+        })
+        .catch(err => {
+          Alert.alert('next song err T_T');
+          if(err === 'err paring xml , please check xiami SDK'){
+            this.onEnd();
+          }
+        });
+    }
   }
 
   onEnd(){
@@ -240,7 +350,7 @@ class Player extends Component{
       artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
       vendor: nextSong.vendor,
       id: nextSong.id,
-      url: nextSong.url
+      url: nextSong.url,
     }, () => {
       let nextNextSong = this.getNextSong();
       this.getNextSongURL(nextNextSong);
@@ -248,7 +358,8 @@ class Player extends Component{
   }
 
   onError(e){
-    Alert.alert(e);
+    console.log(e);
+    Alert.alert(JSON.stringify(e));
   }
 
   dragSlider(e){
@@ -273,7 +384,7 @@ class Player extends Component{
     let video;
     if(this.state.loaded && this.state.url && this.state.nextSong){
       video =   <Video
-                  source={{uri: this.state.url}}
+                  source={{uri: this.state.url, type: 'mp3'}}
                   nextSource={{uri: this.state.nextSong.url}}
                   ref={audio => this.audioPlayer = audio}
                   muted={this.state.mute}
@@ -463,6 +574,7 @@ const mapStateToProps = (state) => {
   return {
     currentList: currentList.songs,
     defaultSongID: currentList.defaultSongID,
+    downloadedSong: state.downloadedSong
   }
 }
 
