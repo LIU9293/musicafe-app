@@ -39,17 +39,6 @@ class SongRowWithAction extends Component{
         vendor: this.props.vendor,
       }
     });
-    if(data[0] && !data[0].album){
-      data = data.map(item => {
-        return {
-          ...item,
-          album: {
-            id: this.props.albumID,
-            cover: this.props.cover
-          }
-        }
-      })
-    }
     this.props.updateCurrentPlaylist(data, this.props.id);
     this.props.PlayerRouter.push({
       ident: 'Player',

@@ -21,6 +21,11 @@ class TabView extends Component{
   }
 
   async componentWillMount(){
+    try{
+      let folderData = await RNFS.readDir(root);
+    } catch(e){
+      RNFS.mkdir(root);
+    }
     try {
       let playlist = await AsyncStorage.getItem('playlist');
       let asyncDataString = await AsyncStorage.getItem('download');

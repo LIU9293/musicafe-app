@@ -138,7 +138,7 @@ class Player extends Component{
       }
     }
     this.setState({
-      cover: song.album.cover || song.cover,
+      cover: song.album.cover,
       name: song.name,
       artist: song.artist || song.artists.map(i => i.name).join(' & '),
       vendor: song.vendor,
@@ -248,6 +248,9 @@ class Player extends Component{
   getNextSong(){
     const { songlist } = this.state;
     let song;
+    if(songlist.length === 1){
+      return songlist[0];
+    }
     if(this.state.random){
       //get an new list, like the original one but do not have just ended song.
       let newList = [...songlist].filter(x => x.id !== this.state.id);
@@ -342,19 +345,29 @@ class Player extends Component{
 
   manuallySetNextSong(){
     const { nextSong } = this.state;
-    this.setState({
-      songLength: 1,
-      currentPosition: 0,
-      cover: nextSong.album.cover || nextSong.cover,
-      name: nextSong.name,
-      artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
-      vendor: nextSong.vendor,
-      id: nextSong.id,
-      url: nextSong.url,
-    }, () => {
-      let nextNextSong = this.getNextSong();
-      this.getNextSongURL(nextNextSong);
-    });
+    if(nextSong.url === this.state.url){
+      this.setState({
+        url: null
+      }, () => {
+        this.setState({
+          url: nextSong.url
+        });
+      });
+    } else {
+      this.setState({
+        songLength: 1,
+        currentPosition: 0,
+        cover: nextSong.album.cover || nextSong.cover,
+        name: nextSong.name,
+        artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+        vendor: nextSong.vendor,
+        id: nextSong.id,
+        url: nextSong.url,
+      }, () => {
+        let nextNextSong = this.getNextSong();
+        this.getNextSongURL(nextNextSong);
+      });
+    }
   }
 
   onError(e){

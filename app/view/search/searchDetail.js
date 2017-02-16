@@ -22,6 +22,7 @@ class SearchDetail extends Component{
          type={this.props.type}
          searchKey={this.props.searchKey}
          navigator={this.props.navigator}
+         PlayerRouter={this.props.PlayerRouter}
        />
        <SearchDetailPage
          tabLabel="QQ"
@@ -29,6 +30,7 @@ class SearchDetail extends Component{
          type={this.props.type}
          searchKey={this.props.searchKey}
          navigator={this.props.navigator}
+         PlayerRouter={this.props.PlayerRouter}
        />
        <SearchDetailPage
          tabLabel="网易"
@@ -36,6 +38,7 @@ class SearchDetail extends Component{
          type={this.props.type}
          searchKey={this.props.searchKey}
          navigator={this.props.navigator}
+         PlayerRouter={this.props.PlayerRouter}
        />
      </ScrollableTabView>
    )

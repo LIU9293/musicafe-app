@@ -68,7 +68,7 @@
 
    renderRow(rowData, sectionID, rowID){
      const { type, vendor } = this.props;
-     let cover = (type === 'song') ? rowData.album.cover : rowData.cover;
+     let cover = (type === 'song') ? rowData.album.cover : rowData.coverSmall;
      if(type === 'song'){
        return(
          <SongRowWithAction
@@ -80,8 +80,10 @@
            offline={rowData.offline || false}
            vendor={vendor}
            albumID={rowData.album.id}
-           cover={rowData.album.cover}
+           cover={cover}
            fromType={'song'}
+           listData={[rowData]}
+           PlayerRouter={this.props.PlayerRouter}
          />
        )
      }
@@ -89,9 +91,20 @@
        <View style={styles.row}>
          <TouchableOpacity style={styles.rowLeft} onPress={e => this.pushNext(rowData)}>
            <Image source={{uri: cover}} style={styles.cover} />
-           <Text style={{color: oc.gray1, marginHorizontal: 15}} numberOfLines={2}>
-             {rowData.name}
+           <Text style={{flex: 1, color: oc.gray1, paddingLeft: 15}} numberOfLines={2}>
+             {`${rowData.name} - ${type === 'album' ? rowData.artist.name : rowData.author.name}`}
            </Text>
+           {
+             rowData.offlineNow
+           }
+           {
+             rowData.needPay
+             ? <View style={{marginLeft: 10, flexDirection: 'row', alignItems: 'center'}}>
+                <View style={{backgroundColor: oc.yellow6, height: 8, width: 8, borderRadius: 4}} />
+                <Text style={{color: oc.yellow6, marginLeft: 3}}>付费</Text>
+               </View>
+             : null
+           }
          </TouchableOpacity>
          <View>
          </View>
