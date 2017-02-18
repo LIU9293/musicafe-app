@@ -10,6 +10,7 @@ import Wapper from 'wapper';
 import Loading from 'Loading';
 import MusicIcon from 'MusicIcon';
 import { jumpForward } from 'lib';
+import refetch from 're-fetch';
 
 class Discover extends Component{
   constructor(props){
@@ -18,24 +19,42 @@ class Discover extends Component{
       album: null,
       playlist: null,
       loaded: false,
+      fetchErr: null,
     }
     this.pushToDetail = this.pushToDetail.bind(this);
     this.JumpToPlayer = this.JumpToPlayer.bind(this);
+    this.fetchData = this.fetchData.bind(this);
   }
 
   componentWillMount(){
-    fetch('https://musicafe.co/suggestion.json')
-      .then(res => res.json())
-      .then(json => {
-        this.setState({
-          album: json.album,
-          playlist: json.playlist,
-          loaded: true,
-        });
-      })
-      .catch(err => {
-        console.log(err);
-      })
+    this.fetchData();
+  }
+
+  fetchData(){
+    this.setState({fetchErr: null}, () => {
+      refetch('https://musicafe.co/suggestion.json', {}, 4000, 2)
+        .then(res => res.json())
+        .then(json => {
+          this.setState({
+            album: json.album,
+            playlist: json.playlist,
+            loaded: true,
+            fetchErr: null,
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          if(err === 'timeout'){
+            this.setState({
+              fetchErr: '超时了～ 😯'
+            });
+          } else {
+            this.setState({
+              fetchErr: '请检查网络～ 😯'
+            });
+          }
+        })
+    })
   }
 
   JumpToPlayer(){
@@ -50,6 +69,16 @@ class Discover extends Component{
   }
 
   render(){
+    if(this.state.fetchErr){
+      return(
+        <Wapper style={{justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={{color: oc.white}}>{this.state.fetchErr}</Text>
+          <TouchableOpacity onPress={this.fetchData} style={styles.reloadButton}>
+            <Text style={{color: oc.white}}>重新加载</Text>
+          </TouchableOpacity>
+        </Wapper>
+      )
+    }
     if(this.state.loaded){
       let albumList = this.state.album.map((item, index) => {
         return (
@@ -65,7 +94,7 @@ class Discover extends Component{
               type: 'album',
             })}
           >
-            <Image source={{uri: item.cover}} style={{width: 170, height: 170}} />
+            <Image source={{uri: item.cover}} style={{width: 160, height: 160}} />
             <Image source={{uri: item.cover}} style={styles.nameArea}>
               <BlurView blurType="dark" blurAmount={20} style={styles.blur}>
                 <Text style={styles.albumName} numberOfLines={1}>{item.name}</Text>
@@ -89,7 +118,7 @@ class Discover extends Component{
               type: 'playlist',
             })}
           >
-            <Image source={{uri: item.cover}} style={{width: 170, height: 170}} />
+            <Image source={{uri: item.cover}} style={{width: 160, height: 160}} />
             <Image source={{uri: item.cover}} style={styles.nameArea}>
               <BlurView blurType="dark" blurAmount={20} style={styles.blur}>
                 <Text style={styles.albumName} numberOfLines={1}>{item.name}</Text>
@@ -136,7 +165,7 @@ class Discover extends Component{
 const styles = StyleSheet.create({
   album: {
     height: 230,
-    width: 170,
+    width: 160,
     marginHorizontal: 10,
   },
   title: {
@@ -148,24 +177,25 @@ const styles = StyleSheet.create({
     fontWeight:'bold'
   },
   nameArea: {
-    width: 170,
+    width: 160,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: oc.gray2,
   },
   blur: {
-    width: 170,
+    width: 160,
     height: 60,
     resizeMode: 'cover',
     justifyContent: 'center',
     alignItems: 'center',
   },
   albumName: {
-    color: oc.gray4,
+    color: oc.gray1,
   },
   artist: {
-    color: oc.gray5,
+    color: oc.gray2,
+    marginTop: 3,
   },
   musicIcon: {
     width: 50,
@@ -173,6 +203,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  reloadButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 36,
+    width: 100,
+    borderColor: oc.white,
+    borderWidth: 1,
+    borderRadius: 3,
+    marginTop: 30,
   }
 })
 

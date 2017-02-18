@@ -4,9 +4,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { View, TabBarIOS, StatusBar, AsyncStorage, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import Discover from 'discover';
 import Search from 'search';
+import Search2 from 'search2';
 import Playlist from 'Playlist';
 import oc from 'oc';
 const RNFS = require('react-native-fs');
@@ -16,7 +17,7 @@ class TabView extends Component{
   constructor(props){
     super(props);
     this.state = {
-      tab: 'home'
+      tab: 'search'
     }
   }
 
@@ -78,33 +79,42 @@ class TabView extends Component{
           translucent={false}
           barTintColor={oc.black}
         >
-          <TabBarIOS.Item
+          <Icon.TabBarItemIOS
             selected={this.state.tab === "home"}
-            title={"home"}
+            title={"discover"}
             key="home"
+            iconColor={oc.gray3}
+            selectedIconColor={oc.gray1}
             onPress={e => this.setState({tab: 'home'})}
-            systemIcon={'featured'}
+            iconName={'ios-radio-outline'}
+            selectedIconName={'ios-radio'}
           >
             <Discover navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
-          </TabBarIOS.Item>
-          <TabBarIOS.Item
+          </Icon.TabBarItemIOS>
+          <Icon.TabBarItemIOS
             selected={this.state.tab === "search"}
             title={"search"}
             key="search"
+            iconColor={oc.gray3}
+            selectedIconColor={oc.gray1}
             onPress={e => this.setState({tab: 'search'})}
-            systemIcon={'search'}
+            iconName={'ios-search-outline'}
+            selectedIconName={'ios-search'}
           >
-            <Search navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
-          </TabBarIOS.Item>
-          <TabBarIOS.Item
+            <Search2 navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
+          </Icon.TabBarItemIOS>
+          <Icon.TabBarItemIOS
             selected={this.state.tab === "playlist"}
-            title={"my music"}
+            title={"music"}
             key="playlist"
+            iconColor={oc.gray3}
+            selectedIconColor={oc.gray1}
             onPress={e => this.setState({tab: 'playlist'})}
-            systemIcon={'bookmarks'}
+            iconName={'ios-musical-notes-outline'}
+            selectedIconName={'ios-musical-notes'}
           >
             <Playlist navigator = {this.props.navigator} PlayerRouter={this.props.PlayerRouter} />
-          </TabBarIOS.Item>
+          </Icon.TabBarItemIOS>
         </TabBarIOS>
       </View>
     )
