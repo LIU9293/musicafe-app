@@ -12,21 +12,19 @@ class Navbar extends Component {
   render () {
     return(
       <View style={[styles.container, this.props.style]}>
-        <BlurView blurType="light" blurAmount={25} style={styles.blur}>
-          <View style={[styles.left, {backgroundColor: this.props.backgroundColor}]} >
-            <TouchableOpacity style={styles.button} onPress={e => this.props.onLeft(e)}>
-              {this.props.left || null}
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.middle, {backgroundColor: this.props.backgroundColor}]}>
-            {this.props.middle || null}
-          </View>
-          <View style={[styles.right, {backgroundColor: this.props.backgroundColor}]} >
-            <TouchableOpacity style={styles.button} onPress={e => this.props.onRight(e)}>
-              {this.props.right || null}
-            </TouchableOpacity>
-          </View>
-        </BlurView>
+        <View style={[styles.left, {backgroundColor: this.props.backgroundColor}]} >
+          <TouchableOpacity style={styles.button} onPress={e => this.props.onLeft(e)}>
+            {this.props.left || null}
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.middle, {backgroundColor: this.props.backgroundColor}]}>
+          {this.props.middle || null}
+        </View>
+        <View style={[styles.right, {backgroundColor: this.props.backgroundColor}]} >
+          <TouchableOpacity style={styles.button} onPress={e => this.props.onRight(e)}>
+            {this.props.right || null}
+          </TouchableOpacity>
+        </View>
       </View>
     )
   }

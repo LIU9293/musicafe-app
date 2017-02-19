@@ -2,12 +2,15 @@
  * @providesModule SearchDetailPage
  */
  import React, { Component } from 'react'
- import { View, Text, StyleSheet, ListView, Image, TouchableOpacity } from 'react-native';
+ import { View, Text, StyleSheet, ListView, Image,
+   TouchableOpacity, InteractionManager, LayoutAnimation } from 'react-native';
  import api from 'api';
  import Wapper from 'wapper';
  import { size } from 'lib';
  import oc from 'oc';
+ import Loading from 'Loading';
  import SongRowWithAction from 'SongRowWithAction';
+ import Error from 'Error';
 
  class SearchDetailPage extends Component{
    constructor(props){
@@ -19,6 +22,7 @@
        page: 1,
        total: 0,
        dataSource: ds.cloneWithRows([]),
+       err: null,
      }
      this.searchData = this.searchData.bind(this);
      this.renderRow = this.renderRow.bind(this);
@@ -28,7 +32,9 @@
    }
 
    componentDidMount(){
-     this.searchData(15, this.state.page);
+     InteractionManager.runAfterInteractions(() => {
+       this.searchData(15, this.state.page);
+     });
    }
 
    searchData(limit, page){
@@ -56,14 +62,23 @@
             loaded: true,
             dataSource: this.state.dataSource.cloneWithRows(this.state.data.concat(data)),
             page: this.state.page+1,
+            err: null,
           })
         } else {
           throw res.message;
         }
       })
       .catch(err => {
-        console.log(err);
-      })
+        if(err === 'timeout'){
+          this.setState({
+            err: '超时了～ 😯',
+          });
+        } else {
+          this.setState({
+            err: '出错了～ 😯',
+          });
+        }
+      });
    }
 
    renderRow(rowData, sectionID, rowID){
@@ -98,10 +113,9 @@
              rowData.offlineNow
            }
            {
-             rowData.needPay
+             rowData.needPay && rowData.vendor === 'netease'
              ? <View style={{marginLeft: 10, flexDirection: 'row', alignItems: 'center'}}>
-                <View style={{backgroundColor: oc.yellow6, height: 8, width: 8, borderRadius: 4}} />
-                <Text style={{color: oc.yellow6, marginLeft: 3}}>付费</Text>
+                <View style={{backgroundColor: oc.gray8, height: 8, width: 8, borderRadius: 4}} />
                </View>
              : null
            }
@@ -150,21 +164,30 @@
    }
 
    render(){
-     if(this.state.loaded){
+     LayoutAnimation.easeInEaseOut();
+     if(this.state.err){
        return(
-         <Wapper>
-           <ListView
-             dataSource={this.state.dataSource}
-             renderRow={this.renderRow}
-             enableEmptySections={true}
-             onEndReached={this.loadMore}
-             onEndReachedThreshold={50}
-             renderFooter={this.renderFooter}
-           />
+         <Wapper style={{justifyContent: 'center', alignItems: 'center'}}>
+           <Error onPress={e => this.searchData(15, this.state.page)} />
          </Wapper>
        )
      } else {
-       return <View/>
+       if(this.state.loaded){
+         return(
+           <Wapper>
+             <ListView
+               dataSource={this.state.dataSource}
+               renderRow={this.renderRow}
+               enableEmptySections={true}
+               onEndReached={this.loadMore}
+               onEndReachedThreshold={50}
+               renderFooter={this.renderFooter}
+             />
+           </Wapper>
+         )
+       } else {
+         return <View style={{width: size.width, height: size.height - 64}}><Loading /></View>
+       }
      }
    }
  }

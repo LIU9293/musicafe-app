@@ -3,9 +3,10 @@
  */
 import React, { Component } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, Navigator,
-  Button, TouchableOpacity, Modal, LayoutAnimation, AsyncStorage, Alert } from 'react-native';
+  Button, TouchableOpacity, Modal, LayoutAnimation,
+  AsyncStorage, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { size } from 'lib';
+import { size, downloadOneSong } from 'lib';
 import oc from 'oc';
 import api from 'api';
 const { BlurView } = require('react-native-blur');
@@ -30,6 +31,8 @@ class SongRowWithAction extends Component{
     this.renderModal = this.renderModal.bind(this);
     this.renderActions = this.renderActions.bind(this);
     this.renderPlaylist = this.renderPlaylist.bind(this);
+    this.deleteSong = this.deleteSong.bind(this);
+    this.pushToAlbum = this.pushToAlbum.bind(this);
   }
 
   play(){
@@ -39,6 +42,9 @@ class SongRowWithAction extends Component{
         vendor: this.props.vendor,
       }
     });
+    if(this.props.vendor === 'netease'){
+      data = data.filter(i => (i.needPay === false && i.offlineNow === false));
+    }
     this.props.updateCurrentPlaylist(data, this.props.id);
     this.props.PlayerRouter.push({
       ident: 'Player',
@@ -63,37 +69,31 @@ class SongRowWithAction extends Component{
   }
 
   addSong(listIdent){
-    let { songData, fromType, albumID, cover, vendor } = this.props;
-    if(fromType === 'album'){
-      songData = {
-        ...songData,
-        album: {cover: cover, id: albumID}
-      }
-    }
+    let { songData, fromType, albumID, cover, vendor, playlist } = this.props;
     let newSongData = {
       ...songData,
       vendor: this.props.vendor,
     }
-    this.setState({
-      modal: false,
-      step: 1,
-    });
-    this.props.addSong(listIdent, newSongData);
     try {
-      AsyncStorage.setItem('playlist', JSON.stringify(this.props.playlist));
+      let addingPlaylist = playlist.filter(i => (i.ident === listIdent))[0];
+      if(addingPlaylist.songs.filter(song => (song.id === songData.id && song.vendor === vendor))[0]){
+        Alert.alert('歌单里面已经有这首歌了哦～ 😄');
+      } else {
+        this.props.addSong(listIdent, newSongData);
+        AsyncStorage.setItem('playlist', JSON.stringify(this.props.playlist));
+        this.setState({
+          modal: false,
+          step: 1,
+        });
+      }
     } catch (error) {
+      console.log(error);
       Alert.alert('出了点问题，请稍后再添加~😯');
     }
   }
 
   download(e){
-    let {songData, fromType, cover, vendor, id, albumID} = this.props;
-    if(fromType === 'album'){
-      songData = {
-        ...songData,
-        album: {cover: cover, id: albumID}
-      }
-    }
+    let {songData, fromType, cover, vendor, id, albumID, dispatch} = this.props;
     this.setState({
       modal: false,
       step: 1,
@@ -106,65 +106,47 @@ class SongRowWithAction extends Component{
         RNFS.mkdir(root);
         console.log(err);
       })
-    api.getSongURL(vendor, id, albumID)
-      .then(url => {
-        //set a tag for each vendor, name cannot be complex due to this issue:
-        //https://github.com/react-native-community/react-native-video/issues/213
-        let tag = 0;
-        if(vendor === 'xiami'){tag = 1}
-        if(vendor === 'qq'){tag = 2}
-        if(vendor === 'netease'){tag = 3}
-        let downloadDest = `${root}${tag}${id}.mp3`;
-        const ret = RNFS.downloadFile({
-          fromUrl: url,
-          toFile: downloadDest,
-          begin: res => console.log(res),
-          progress: res => console.log(res),
-          background: true,
-          progressDivider: 1
-        });
-        let jobId = ret.jobId;
-        console.log(`job id: ${jobId}`);
-        ret.promise
-          .then(res => {
-            console.log(`output: ${JSON.stringify(res)}`);
-            console.log(`output file is: file://${downloadDest}`);
-            jobId = -1;
-            let newSongData = {
-              ...songData,
-              vendor: this.props.vendor,
-              filePath: `file://${downloadDest}`,
-              fileName: `${tag}${id}.mp3`,
-              fileSize: res.bytesWritten,
-            };
-            this.props.addDownloadSong(`${tag}${id}`, newSongData);
-            try {
-              AsyncStorage.getItem('download')
-                .then(data => {
-                  let jsonData = JSON.parse(data);
-                  jsonData[`${tag}${id}`] = newSongData;
-                  AsyncStorage.setItem(`download`, JSON.stringify(jsonData));
-                })
-                .catch(err => {
-                  //no data yet
-                  let key = `${tag}${id}`;
-                  let initData = {};
-                  initData[key] = newSongData;
-                  AsyncStorage.setItem(`download`, JSON.stringify(initData));
-                })
-            } catch (error) {
-              throw 'AsyncStorage error';
-            }
+    downloadOneSong(vendor, id, albumID, songData, dispatch).catch(e => {
+      Alert.alert('下载出错～😯');
+    });
+  }
+
+  pushToAlbum(songData){
+    this.setState({
+      modal: false,
+      step: 1,
+    });
+    this.props.navigator.push({
+      ident: 'SonglistDetail',
+      id: songData.album.id,
+      vendor: this.props.vendor,
+      cover: songData.album.cover,
+      name: songData.album.name,
+      artist: songData.artists.map(i => i.name).join(' & '),
+      type: 'album'
+    });
+  }
+
+  deleteSong(fromType, songData, playlistIdent){
+    if(fromType === 'userDownloadlist'){
+      console.log('will delete song in download list');
+      try{
+        RNFS.unlink(songData.filePath)
+          .then(() => {
+            console.log(`the song: ${songData.name} has been deleted.`);
+            this.props.deleteDownloadSong(songData.id, songData.vendor);
           })
-          .catch(err => {
-            jobId = -1;
-            throw 'download error';
-          });
-      })
-      .catch(e => {
+      } catch(e){
         console.log(e);
-        Alert.alert(e);
-      })
+      }
+    } else {
+      console.log('will delete song in user playlist');
+      this.props.deleteSongInPlaylist(playlistIdent, songData.id);
+    }
+    this.setState({
+      modal: false,
+      step: 1,
+    });
   }
 
   renderModal(){
@@ -177,7 +159,7 @@ class SongRowWithAction extends Component{
         onRequestClose={this.props.onCancel}
       >
         <View style={styles.ModalContaner}>
-          <BlurView blurType="dark" blurAmount={10} style={styles.blur}>
+          <BlurView blurType="dark" blurAmount={20} style={styles.blur}>
             {action}
             <ModalButton
               style={styles.cancelButton}
@@ -191,10 +173,17 @@ class SongRowWithAction extends Component{
   }
 
   renderActions(){
-    return([
+    let { downloading, downloaded, showAlbum, fromType, songData, playlistIdent } = this.props;
+    if(downloaded){
+      icon = <Icon name="ios-checkmark-circle" style={{color: oc.teal3}} size={26} />
+    } else if (downloading){
+      icon = <ActivityIndicator size="small" />;
+    } else {
+      icon = null;
+    }
+    let basicButtonArray = [
       <ModalButton
         key={0}
-        style={{borderBottomWidth: 0.5, borderBottomColor: 'rgba(200, 200, 200, 0.3)'}}
         text="添加"
         onPress={this.chooseList}
       />,
@@ -202,8 +191,29 @@ class SongRowWithAction extends Component{
         key={1}
         text="下载"
         onPress={this.download}
+        icon={icon}
+        disabled={downloaded || downloading}
       />
-    ])
+    ];
+    if(showAlbum){
+      basicButtonArray.push(
+        <ModalButton
+          key={2}
+          text="专辑"
+          onPress={e => this.pushToAlbum(songData)}
+        />
+      )
+    }
+    if(fromType === 'userDownloadlist' || fromType === 'userPlaylist'){
+      basicButtonArray.push(
+        <ModalButton
+          key={3}
+          text="删除"
+          onPress={e => this.deleteSong(fromType, songData, playlistIdent)}
+        />
+      )
+    }
+    return basicButtonArray;
   }
 
   renderPlaylist(){
@@ -225,23 +235,51 @@ class SongRowWithAction extends Component{
   render(){
     LayoutAnimation.easeInEaseOut();
     let modal = this.renderModal();
+    let {downloaded, downloading} = this.props;
     return(
-      <TouchableOpacity style={[styles.song, {
-          borderTopColor: this.props.index === 0 ? oc.black : oc.gray8
-        }]}
-        onPress={this.play}
-      >
-        <Text
-          numberOfLines={2}
-          style={{color: oc.gray1, flex: 1, marginHorizontal: 15}}
+      <View style={
+        this.props.index === 0
+        ? {}
+        : {borderTopWidth: 1, borderTopColor: oc.gray9}
+      }>
+        <TouchableOpacity
+          style={styles.song}
+          onPress={this.play}
+          disabled={this.props.canload ? false : true}
         >
-          {`${this.props.index+1}. ${this.props.name}${this.props.showArtist ? (' - ' + this.props.artist) : ''}`}
-        </Text>
-        <TouchableOpacity style={styles.rowButton} onPress={e => this.showModal(1)}>
-          <Icon name="ios-more" color={oc.gray1} size={32} />
+          <View style={{flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-start'}}>
+            <Text
+              numberOfLines={2}
+              style={{color: this.props.canload ? oc.gray1 : oc.gray5, marginLeft: 15, marginRight: 5}}
+            >
+              {`${this.props.index+1}. ${this.props.name}${this.props.showArtist ? (' - ' + this.props.artist) : ''}`}
+            </Text>
+            {
+              downloaded
+              ? <View style={{backgroundColor: oc.teal6, height: 8, width: 8, borderRadius: 4, marginLeft: 5}} />
+              : null
+            }
+            {
+              downloading
+              ? <ActivityIndicator size="small" />
+              : null
+            }
+            {
+              this.props.canload
+              ? null
+              : <View style={{backgroundColor: oc.red6, height: 8, width: 8, borderRadius: 4, marginLeft: 5}} />
+            }
+          </View>
+          <TouchableOpacity
+            style={styles.rowButton}
+            onPress={e => this.showModal(1)}
+            disabled={this.props.canload ? false : true}
+          >
+            <Icon name="ios-more" color={this.props.canload ? oc.gray1 : oc.gray5} size={32} />
+          </TouchableOpacity>
+          {modal}
         </TouchableOpacity>
-        {modal}
-      </TouchableOpacity>
+      </View>
     )
   }
 }
@@ -250,7 +288,6 @@ const styles = StyleSheet.create({
   song: {
     flexDirection: 'row',
     height: 60,
-    borderTopWidth: 0.5,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -284,15 +321,36 @@ SongRowWithAction.defaultProps = {
   id: null,
   vendor: '',
   artist: '',
-  songInfo: null,
+  songData: null,
   showArtist: false,
   showAlbumInActions: false,
   onCancel: () => {},
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
+  let { vendor, id, needPay, offline } = props;
+  let downloading = false, downloaded = false, canload = true;
+  let tag = 0;
+  if(vendor === 'xiami'){tag = 1}
+  if(vendor === 'qq'){tag = 2}
+  if(vendor === 'netease'){tag = 3}
+  if(Object.keys(state.downloadedSong).indexOf(`${tag}${id}`) > -1){
+    downloaded = true;
+  } else if (state.downloadingSong.filter(i => (i.id === id && i.vendor === vendor))[0]){
+    downloading = true;
+  }
+  if(vendor === 'netease'){
+    if(needPay || offline){
+      canload = false;
+    }
+  }
   return{
-    playlist: state.playlist
+    playlist: state.playlist,
+    downloadedSong: state.downloadedSong,
+    downloadingSong: state.downloadingSong,
+    downloaded,
+    downloading,
+    canload,
   }
 }
 
@@ -302,11 +360,23 @@ const mapDispatchToProps = (dispatch) => {
       dispatch({type: 'ADD_SONG', ident, song});
     },
     updateCurrentPlaylist: (list, songID) => {
-      dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID})
+      dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID});
     },
     addDownloadSong: (uiqID, songData) => {
-      dispatch({type: 'ADD_DOWNLOADED_SONG', uiqID, songData})
-    }
+      dispatch({type: 'ADD_DOWNLOADED_SONG', uiqID, songData});
+    },
+    deleteSongInPlaylist: (ident, songID) => {
+      dispatch({type: 'DELETE_SONG', ident, songID});
+    },
+    deleteDownloadSong: (id, vendor) => {
+      let tag = 0, uiqID;
+      if(vendor === 'xiami'){tag = 1}
+      if(vendor === 'qq'){tag = 2}
+      if(vendor === 'netease'){tag = 3}
+      uiqID = `${tag}${id}`;
+      dispatch({type: 'DELETE_DOWNLOADED_SONG', uiqID});
+    },
+    dispatch,
   }
 }
 

@@ -988,7 +988,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.musicafe;
+				PRODUCT_BUNDLE_IDENTIFIER = musicafe.app;
 				PRODUCT_NAME = musicapp;
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1015,7 +1015,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.musicafe;
+				PRODUCT_BUNDLE_IDENTIFIER = musicafe.app;
 				PRODUCT_NAME = musicapp;
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";

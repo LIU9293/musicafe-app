@@ -132,9 +132,21 @@ const downloadedSong = (state = {}, action) => {
   }
 }
 
+const downloadingSong = (state = [], action) => {
+  switch (action.type) {
+    case 'ADD_DOWNLOADING_SONG':
+      return [...state].concat([action.song]);
+    case 'REMOVE_DOWNLOADING_SONG':
+      return [...state].filter(song => (song.id !== action.id && song.vendor !== action.vendor))
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   playlist,
   searchKey,
   appStatus,
-  downloadedSong
+  downloadedSong,
+  downloadingSong,
 })

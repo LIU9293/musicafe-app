@@ -10,7 +10,11 @@ class ModalButton extends Component{
   render(){
     return(
       <View style={[styles.container, this.props.style]}>
-        <TouchableOpacity onPress={this.props.onPress} style={[styles.button, this.props.textStyle]}>
+        <TouchableOpacity
+          onPress={this.props.onPress}
+          style={[styles.button, this.props.textStyle]}
+          disabled={this.props.disabled}
+        >
           <Text style={styles.text}>{this.props.text}</Text>
         </TouchableOpacity>
       </View>

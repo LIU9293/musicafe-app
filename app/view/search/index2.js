@@ -5,16 +5,17 @@
 import React,{ Component } from 'react';
 import { Image, StyleSheet, StatusBar, Text, TextInput,
  TouchableWithoutFeedback, Animated, Easing, View,
- TouchableOpacity, Picker, ScrollView } from 'react-native';
+ TouchableOpacity, Picker, ScrollView, Alert } from 'react-native';
 import { size } from 'lib';
 import Icon from 'react-native-vector-icons/Ionicons';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import Wapper from 'wapper';
 import oc from 'oc';
+import api from 'api';
 import MusicIcon from 'MusicIcon';
 import { jumpForward } from 'lib';
 
-export default class extends Component{
+export default class Search2 extends Component{
   constructor() {
     super();
     this.state = {
@@ -24,11 +25,14 @@ export default class extends Component{
       searchType: 'album',
       text: '',
       textInputFocus: false,
+      suggestionData: [],
     }
     this.submit = this.submit.bind(this);
     this.jump = this.jump.bind(this);
     this.showSearchTextInput = this.showSearchTextInput.bind(this);
     this.hideSearchTextInput = this.hideSearchTextInput.bind(this);
+    this.changeText = this.changeText.bind(this);
+    this.searchSuggestion = this.searchSuggestion.bind(this);
   }
 
   showSearchTextInput() {
@@ -94,7 +98,56 @@ export default class extends Component{
     jumpForward(this.props.PlayerRouter);
   }
 
+  changeText(text){
+    console.log(text);
+    this.setState({text});
+    if(text === ''){
+      this.setState({
+        suggestionData: []
+      });
+    } else {
+      this.searchSuggestion(text);
+    }
+  }
+
+  searchSuggestion(text){
+    api.getSearchSuggestion(text)
+      .then(res => {
+        let suggestions = [];
+        suggestions = suggestions.concat(res.album.itemlist.map(i => i.name))
+                                 .concat(res.singer.itemlist.map(i => i.name))
+                                 .concat(res.song.itemlist.map(i => i.name));
+        this.setState({
+          suggestionData: suggestions
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
   render() {
+    let suggestions;
+    if(this.state.suggestionData.length > 0){
+      console.log(this.state.suggestionData);
+      suggestions = this.state.suggestionData.map((i, index) => {
+        return(
+          <TouchableOpacity style={styles.row} key={index+1}>
+            <Text
+              style={{color: oc.white}}
+              numberOfLines={1}
+            >
+              {i.toString()}
+            </Text>
+          </TouchableOpacity>
+        )
+      });
+      suggestions.unshift(
+        <View key={0} style={{marginHorizontal: 20, marginVertical: 5}}>
+          <Text style={{color: oc.gray2, marginVertical: 5}}>{`热门搜索: `}</Text>
+        </View>
+      )
+    }
     return(
       <Wapper style={{marginBottom: this.state.textInputFocus ? 0 : 50}}>
         {
@@ -111,8 +164,8 @@ export default class extends Component{
                 selectedValue={this.state.searchType}
                 onValueChange={(type) => this.setState({searchType: type})}
               >
-                <Picker.Item label="专辑" value="album" />
                 <Picker.Item label="歌曲" value="song" />
+                <Picker.Item label="专辑" value="album" />
                 <Picker.Item label="歌单" value="playlist" />
               </Picker>
             </View>
@@ -143,7 +196,7 @@ export default class extends Component{
                 <Text style={styles.scaleText}>{'你想听什么？'}</Text>
                 <TextInput
                   style={styles.textInput}
-                  onChangeText={(text) => this.setState({text})}
+                  onChangeText={this.changeText}
                   value={this.state.text}
                   autoFocus={true}
                   onSubmitEditing={this.submit}
@@ -151,6 +204,10 @@ export default class extends Component{
                   placeholderTextColor={oc.gray5}
                   returnKeyType={'search'}
                 />
+                <View
+                  style={{height: 1, width: 100, backgroundColor: oc.gray5, marginBottom: 5, marginLeft: 20}}
+                />
+                {suggestions}
               </ScrollView>
               <View style={{height: 50, width: size.width, justifyContent: 'center', alignItems: 'center'}}>
                 <TouchableOpacity
@@ -211,6 +268,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer:{
     flex: 1,
+    marginBottom: 10,
     backgroundColor: oc.gray8,
   },
   scaleOnContainer: {
@@ -226,7 +284,7 @@ const styles = StyleSheet.create({
   textInput: {
     height: 40,
     marginTop: 10,
-    marginVertical: 10,
+    marginBottom: 5,
     marginHorizontal: 20,
     color: oc.gray1,
     borderBottomWidth: 1,
@@ -241,5 +299,11 @@ const styles = StyleSheet.create({
     top: 20,
     right: 0,
     zIndex: 999,
+  },
+  row: {
+    height: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   }
 });

@@ -5,33 +5,11 @@ import Wapper from 'wapper';
 import { connect } from 'react-redux';
 import { size } from 'lib';
 import oc from 'oc'
-const RNFS = require('react-native-fs');
-const root = `${RNFS.DocumentDirectoryPath}/musicafe/`;
+import SongRowWithAction from 'SongRowWithAction';
 
 class UserDownload extends Component{
   constructor(props){
     super(props);
-    this.pushToPlayer = this.pushToPlayer.bind(this);
-  }
-
-  pushToPlayer(songID){
-    let newData = Object.values(this.props.downloadedSong).map(item => {
-      if(!item.artist){
-        return {
-          ...item,
-          artist: item.artists.map(i => i.name).join(' & '),
-        }
-      }
-    });
-    this.props.updateCurrentPlaylist(newData, songID);
-    this.props.PlayerRouter.push({
-      ident: 'Player',
-      playNow: true,
-      sceneConfig: {
-        ...Navigator.SceneConfigs.FloatFromBottom,
-        gestures: {jumpBack: Navigator.SceneConfigs.FloatFromBottom.gestures.pop}
-      }
-    });
   }
 
   render(){
@@ -39,22 +17,32 @@ class UserDownload extends Component{
     console.log(Object.values(this.props.downloadedSong));
     list = Object.values(this.props.downloadedSong).map((song, index) => {
       return (
-        <TouchableHighlight style={[styles.row, {
-            borderTopColor: index === 0 ? oc.black : oc.gray7
-          }]}
+        <SongRowWithAction
+          navigator={this.props.navigator}
           key={index}
-          onPress={e => this.pushToPlayer(song.id)}
-        >
-          <Text style={styles.text}>
-            {`${index+1}. ${song.name} - ${song.artists.map(i => i.name).join('&')}`}
-          </Text>
-        </TouchableHighlight>
+          songData={song}
+          index={index}
+          name={song.name}
+          id={song.id}
+          needPay={song.needPay || false}
+          offline={song.offline || false}
+          vendor={song.vendor}
+          artist={song.artists.map(i => i.name).join(' & ')}
+          albumID={song.album.id}
+          cover={song.album.cover}
+          showArtist={true}
+          fromType={'userDownloadlist'}
+          listData={Object.values(this.props.downloadedSong)}
+          PlayerRouter={this.props.PlayerRouter}
+          showAlbum={true}
+        />
       )
     });
     return(
       <Wapper>
         <ScrollView
           showsVerticalScrollIndicator={false}
+          style={styles.scroll}
         >
           {list}
         </ScrollView>
@@ -64,18 +52,11 @@ class UserDownload extends Component{
 }
 
 const styles = StyleSheet.create({
-  row: {
-    height: 64,
+  scroll: {
+    position: 'absolute',
+    height: size.height - 64,
     width: size.width,
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    borderTopWidth: 0.5,
-    backgroundColor: oc.black
-  },
-  text: {
-    color: oc.gray1,
+    paddingBottom: 64,
   },
 });
 

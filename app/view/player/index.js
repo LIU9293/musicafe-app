@@ -4,15 +4,18 @@
 
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Slider, TouchableOpacity, InteractionManager,
-  Image, Alert } from 'react-native';
+  Image, Alert, ActivityIndicator, ScrollView, LayoutAnimation } from 'react-native';
 import Video from 'react-native-video';
 import oc from 'oc';
 import api from 'api';
 import Wapper from 'wapper';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { size } from 'lib';
+import { size, downloadOneSong } from 'lib';
 import { connect } from 'react-redux';
 import MusicControl from 'react-native-music-control';
+const { BlurView } = require('react-native-blur');
+import NowList from 'NowList';
+import Navbar from 'navbar';
 const { height, width } = size;
 
 class Player extends Component{
@@ -33,6 +36,7 @@ class Player extends Component{
       currentPosition: 0,
       songlist: [],
       nextSong: {},
+      enableBackground: false,
     };
     this.isDragging = false;
     this.mute = this.mute.bind(this);
@@ -48,6 +52,9 @@ class Player extends Component{
     this.getNextSongURL = this.getNextSongURL.bind(this);
     this.manuallySetNextSong = this.manuallySetNextSong.bind(this);
     this.setupController = this.setupController.bind(this);
+    this.downloadSong = this.downloadSong.bind(this);
+    this.playNextSong = this.playNextSong.bind(this);
+    this.handlePageChange = this.handlePageChange.bind(this);
   }
 
   componentWillReceiveProps(nextProps){
@@ -100,6 +107,22 @@ class Player extends Component{
     MusicControl.resetNowPlaying();
   }
 
+  downloadSong(){
+    //first, get current song info
+    let {songlist, vendor, id} = this.state;
+    let { dispatch } = this.props;
+    let nowPlayingSong = songlist.filter(i => (i.id === id && i.vendor === vendor))[0];
+    if(!nowPlayingSong){
+      Alert.alert('下载出错～ 😯');
+      return;
+    } else {
+      downloadOneSong(nowPlayingSong.vendor, nowPlayingSong.id, nowPlayingSong.album.id, nowPlayingSong, dispatch)
+        .catch(e => {
+          Alert.alert('下载出错～ 😯');
+        });
+    }
+  }
+
   setupController(playing){
     MusicControl.setNowPlaying({
       title: this.state.name,
@@ -138,7 +161,7 @@ class Player extends Component{
       }
     }
     this.setState({
-      cover: song.album.cover,
+      cover: song.album.coverBig || song.album.cover,
       name: song.name,
       artist: song.artist || song.artists.map(i => i.name).join(' & '),
       vendor: song.vendor,
@@ -309,7 +332,6 @@ class Player extends Component{
     } else {
       api.getSongURL(vendor, id, albumID)
         .then(url => {
-          console.log(url);
           this.setState({
             nextSong: {
               ...song,
@@ -332,7 +354,7 @@ class Player extends Component{
     this.setState({
       songLength: 1,
       currentPosition: 0,
-      cover: nextSong.album.cover || nextSong.cover,
+      cover: nextSong.album.coverBig || nextSong.album.cover,
       name: nextSong.name,
       artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
       vendor: nextSong.vendor,
@@ -357,7 +379,7 @@ class Player extends Component{
       this.setState({
         songLength: 1,
         currentPosition: 0,
-        cover: nextSong.album.cover || nextSong.cover,
+        cover: nextSong.album.coverBig || nextSong.album.cover,
         name: nextSong.name,
         artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
         vendor: nextSong.vendor,
@@ -393,8 +415,88 @@ class Player extends Component{
     }
   }
 
+  playNextSong(id, vendor){
+    try{
+      let nextSong = this.state.songlist.filter(i => (i.id === id && i.vendor === vendor))[0];
+      let tag = 0;
+      if(vendor === 'xiami'){tag = 1}
+      if(vendor === 'qq'){tag = 2}
+      if(vendor === 'netease'){tag = 3}
+      LayoutAnimation.easeInEaseOut();
+      if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${nextSong.id}`) > -1){
+        this.setState({
+          songLength: 1,
+          currentPosition: 0,
+          cover: nextSong.album.coverBig || nextSong.album.cover,
+          name: nextSong.name,
+          artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+          vendor: nextSong.vendor,
+          id: nextSong.id,
+          url: this.props.downloadedSong[`${tag}${id}`].filePath,
+        }, () => {
+          let nextNextSong = this.getNextSong();
+          this.getNextSongURL(nextNextSong);
+        })
+      } else {
+        api.getSongURL(nextSong.vendor, nextSong.id, nextSong.album.id)
+          .then(url => {
+            if(url === this.state.url){
+              return;
+            }
+            this.setState({
+              songLength: 1,
+              currentPosition: 0,
+              cover: nextSong.album.coverBig || nextSong.album.cover,
+              name: nextSong.name,
+              artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+              vendor: nextSong.vendor,
+              id: nextSong.id,
+              url: url,
+            }, () => {
+              let nextNextSong = this.getNextSong();
+              this.getNextSongURL(nextNextSong);
+            })
+          });
+      }
+    } catch(e){
+      console.log(e);
+      Alert.alert('出错啦～');
+    }
+  }
+
+  handlePageChange(e){
+    let offset = e.nativeEvent.contentOffset;
+    LayoutAnimation.easeInEaseOut();
+    if(offset) {
+      var page = Math.round(offset.x / size.width) + 1;
+      if(page === 1){
+        this.setState({
+          enableBackground: false
+        });
+      } else {
+        this.setState({
+          enableBackground: true
+        });
+      }
+    }
+  }
+
   render(){
-    let video;
+    let video, downloaded, downloading, downloadingIcon;
+    let { vendor, id } = this.state;
+    let tag = 0;
+    if(vendor === 'xiami'){tag = 1}
+    if(vendor === 'qq'){tag = 2}
+    if(vendor === 'netease'){tag = 3}
+    if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${id}`) > -1){
+      //this song has been downloadedSong
+      downloaded = true;
+    } else {
+      downloaded = false;
+    }
+    if(this.props.downloadingSong.filter(i => (i.id === id && i.vendor === vendor))[0]){
+      downloading = true;
+    }
     if(this.state.loaded && this.state.url && this.state.nextSong){
       video =   <Video
                   source={{uri: this.state.url, type: 'mp3'}}
@@ -412,38 +514,91 @@ class Player extends Component{
                   progressUpdateInterval={1000}
                 />
     }
+    if(downloading){
+      downloadingIcon = <ActivityIndicator size="small" />;
+    } else if(downloaded){
+      downloadingIcon = <Icon name="ios-cloud-download" style={[styles.icon, {color: oc.teal3}]} size={30} />;
+    } else {
+      downloadingIcon = <Icon name="ios-cloud-download-outline" style={styles.icon} size={30} />;
+    }
     return(
-      <Wapper>
+      <Wapper style={{backgroundColor: oc.black}}>
         { video || null }
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={e => this.props.PlayerRouter.jumpBack()}>
-            <Icon name="ios-arrow-down" size={26} color={oc.gray1} />
-          </TouchableOpacity>
+        <View style={styles.scrollIndicator}>
+          <View style={{
+            backgroundColor: this.state.enableBackground ? oc.gray8 : oc.gray5,
+            height: 8, width: 8, borderRadius: 4, marginLeft: 5}}
+          />
+          <View style={{
+            backgroundColor: this.state.enableBackground ? oc.gray5 : oc.gray8,
+            height: 8, width: 8, borderRadius: 4, marginLeft: 5}}
+          />
         </View>
+        {
+          this.state.enableBackground
+          ? <Image source={{uri: this.state.cover}} resizeMode="cover" style={styles.blur}>
+              <BlurView blurType="dark" blurAmount={40} style={styles.blur}>
+              </BlurView>
+            </Image>
+          : null
+        }
+        <Navbar
+          right={<Icon name="ios-arrow-down" size={28} color={oc.gray1} />}
+          left={null}
+          onRight={e => this.props.PlayerRouter.jumpBack()}
+          backgroundColor='transparent'
+        />
         <View style={styles.imageContainer}>
-          {
-            this.state.cover
-            ? <Image
-                style={styles.image}
-                source={{uri: this.state.cover}}
-                resizeMode={'contain'}
-              />
-            : null
-          }
-        </View>
-        <View style={styles.songName}>
-          <Text style={{color: oc.gray1, fontSize: 20, marginHorizontal: 20}} numberOfLines={1}>
-            {this.state.name}
-          </Text>
-          <Text style={{color: oc.gray1, fontSize: 16, marginTop: 10}} numberOfLines={1}>
-            {this.state.artist}
-          </Text>
+          <ScrollView
+            horizontal={true}
+            onMomentumScrollEnd={this.handlePageChange}
+            pagingEnabled={true}
+            contentContainerStyle={{alignItems: 'center'}}
+            showsHorizontalScrollIndicator={false}
+          >
+            {
+              this.state.cover
+              ? <View>
+                  <Image
+                    style={styles.image}
+                    source={{uri: this.state.cover}}
+                    resizeMode={'contain'}
+                  />
+                  <View style={styles.songName}>
+                    <Text style={{color: oc.gray1, fontSize: 20, marginHorizontal: 20, backgroundColor: 'transparent'}} numberOfLines={1}>
+                      {this.state.name}
+                    </Text>
+                    <Text style={{color: oc.gray1, fontSize: 16, marginTop: 10, backgroundColor: 'transparent'}} numberOfLines={1}>
+                      {this.state.artist}
+                    </Text>
+                  </View>
+                </View>
+              : <View>
+                  <View style={styles.image} />
+                  <View style={styles.songName}>
+                    <Text style={{color: oc.gray1, fontSize: 20, marginHorizontal: 20, backgroundColor: 'transparent'}} numberOfLines={1}>
+                      {this.state.name}
+                    </Text>
+                    <Text style={{color: oc.gray1, fontSize: 16, marginTop: 10, backgroundColor: 'transparent'}} numberOfLines={1}>
+                      {this.state.artist}
+                    </Text>
+                  </View>
+                </View>
+            }
+            <NowList
+              list={this.state.songlist}
+              id={this.state.id}
+              vendor={this.state.vendor}
+              playing={this.state.playing}
+              nextSong={this.playNextSong}
+            />
+          </ScrollView>
         </View>
         <View style={styles.slider}>
           <View style={styles.songPosition}>
             {
               this.state.loaded
-              ? <Text style={{color: oc.gray1}}>
+              ? <Text style={{color: oc.gray1, backgroundColor: 'transparent'}}>
                   {this.convertTime(this.state.currentPosition)}
                 </Text>
               : null
@@ -462,7 +617,7 @@ class Player extends Component{
           <View style={styles.songPosition}>
             {
               this.state.loaded && this.state.songLength !== 1
-              ? <Text style={{color: oc.gray1}}>
+              ? <Text style={{color: oc.gray1, backgroundColor: 'transparent'}}>
                   {this.convertTime(this.state.songLength)}
                 </Text>
               : null
@@ -471,12 +626,18 @@ class Player extends Component{
         </View>
         <View style={styles.controlButton}>
           <TouchableOpacity style={styles.button} onPress={this.changeSwitchType}>
-            <Icon name="ios-shuffle" style={[styles.icon, {
-                color: this.state.random ? oc.teal3 : 'white'
-              }]} size={28} />
+            {
+              this.state.random
+              ? <Icon name="ios-shuffle" style={styles.icon} size={28} />
+              : <Icon name="ios-repeat" style={styles.icon} size={28} />
+            }
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <Icon name="ios-skip-backward" style={styles.icon} size={34} />
+          <TouchableOpacity
+            style={styles.button}
+            disabled={downloaded ? true : false}
+            onPress={this.downloadSong}
+          >
+            {downloadingIcon}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
@@ -489,7 +650,7 @@ class Player extends Component{
             }
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={e => this.manuallySetNextSong()}>
-            <Icon name="ios-skip-forward" style={styles.icon} size={34} />
+            <Icon name="ios-skip-forward" style={styles.icon} size={32} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={this.mute}>
             {
@@ -521,15 +682,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   imageContainer: {
-    height: (height - 64 - 80 - 60 - 100),
+    height: (height - 64 - 10 - 60 - 100),
     width,
-    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   image: {
     height: (height - 64 - 80 - 60 - 100) > (width - 40) ? (width - 40) : (height - 64 - 80 - 60 - 100),
     width: (height - 64 - 80 - 60 - 100) > (width - 40) ? (width - 40) : (height - 64 - 80 - 60 - 100),
+    marginHorizontal: 20,
   },
   songName: {
     height: 70,
@@ -567,7 +728,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icon: {
-    color: oc.gray1
+    color: oc.gray1,
+    backgroundColor: 'transparent',
   },
   audioStyle: {
     height: 0,
@@ -579,6 +741,23 @@ const styles = StyleSheet.create({
     width: 50,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  blur: {
+    zIndex: -1,
+    position: 'absolute',
+    height: size.height,
+    width: size.width,
+    top: 0,
+    left: 0,
+  },
+  scrollIndicator: {
+    position: 'absolute',
+    width: size.width,
+    top: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 44,
+    flexDirection: 'row',
   }
 });
 
@@ -587,7 +766,8 @@ const mapStateToProps = (state) => {
   return {
     currentList: currentList.songs,
     defaultSongID: currentList.defaultSongID,
-    downloadedSong: state.downloadedSong
+    downloadedSong: state.downloadedSong,
+    downloadingSong: state.downloadingSong,
   }
 }
 
@@ -595,7 +775,8 @@ const mapDispatchToProps = (dispatch) => {
   return {
     changePlayStatus: (playing) => {
       dispatch({type: 'CHANGE_PLAYING_STATUS', playing})
-    }
+    },
+    dispatch,
   }
 }
 

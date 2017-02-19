@@ -48,7 +48,7 @@ class UserPlaylist extends Component{
       return(
         <Parallax.Image
           key={index}
-          style={{ height: 160, marginBottom: 5 }}
+          style={{ height: 160, marginBottom: 2 }}
           overlayStyle={{ backgroundColor: 'transparent'}}
           source={ cover }
         >

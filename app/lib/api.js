@@ -94,6 +94,19 @@ const getSongURL= (vendor, id, albumid) => {
   });
 }
 
+const getSearchSuggestion = (key) => {
+  let url = `https://c.y.qq.com/splcloud/fcgi-bin/smartbox_new.fcg?format=json&key=${key}&platform=yqq`;
+  return new Promise((resolve, reject) => {
+    refetch(url)
+      .then(res => res.json())
+      .then(json => resolve(json.data))
+      .catch(err => reject({
+        success: false,
+        message: err
+      }))
+  });
+}
+
 module.exports = {
   searchsong,
   searchalbum,
@@ -102,4 +115,5 @@ module.exports = {
   getalbum,
   getplaylist,
   getSongURL,
+  getSearchSuggestion
 }
