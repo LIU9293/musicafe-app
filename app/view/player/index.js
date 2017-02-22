@@ -16,6 +16,7 @@ import MusicControl from 'react-native-music-control';
 const { BlurView } = require('react-native-blur');
 import NowList from 'NowList';
 import Navbar from 'navbar';
+import { Cover, BackgroundCover } from './cover';
 const { height, width } = size;
 
 class Player extends Component{
@@ -59,7 +60,11 @@ class Player extends Component{
 
   componentWillReceiveProps(nextProps){
     if(JSON.stringify(nextProps.currentList) !== JSON.stringify(this.state.songlist)){
-      this.setState({ songlist: nextProps.currentList });
+      this.setState({ songlist: nextProps.currentList }, () => {
+        let nextSong = this.getNextSong();
+        this.getNextSongURL(nextSong);
+      });
+
     }
     if(nextProps.defaultSongID !== this.props.defaultSongID){
       this.setState({ songlist: nextProps.currentList }, () => {
@@ -75,20 +80,17 @@ class Player extends Component{
       });
       this.props.changePlayStatus(3);
     });
-    this.setupController(false);
     MusicControl.enableBackgroundMode(true);
     MusicControl.on('play', ()=> {
       if(this.state.playing){
         return
       }
       this.PlayOrPause();
-      this.setupController(true);
     })
     MusicControl.on('pause', ()=> {
       if(this.state.playing){
         this.PlayOrPause();
       }
-      this.setupController(false);
     })
     MusicControl.on('nextTrack', () => {
       this.manuallySetNextSong();
@@ -166,6 +168,8 @@ class Player extends Component{
       artist: song.artist || song.artists.map(i => i.name).join(' & '),
       vendor: song.vendor,
       id: song.id,
+    }, () => {
+      this.setupController(this.props.playNow);
     });
     if(song){
       this.getSongURL(song)
@@ -251,10 +255,7 @@ class Player extends Component{
         currentPosition: parseInt(e.currentTime),
       });
       MusicControl.setNowPlaying({
-        title: this.state.name,
-        artwork: this.state.cover, // URL or File path
-        artist: this.state.artist,
-        duration: parseInt(this.state.songLength), // (Seconds)
+        duration: parseInt(this.state.songLength),
         elapsedPlaybackTime: parseInt(e.currentTime),
       })
     }
@@ -294,7 +295,7 @@ class Player extends Component{
         //current playing song has been deleted from the list, just play the first one
         song = songlist[0];
       } else {
-        if(currentIndex === songlist.length){
+        if(currentIndex === songlist.length - 1){
           //we get the end of the list, play the first one
           song = songlist[0];
         } else {
@@ -319,7 +320,7 @@ class Player extends Component{
           url: song.filePath
         },
         loaded: true,
-      })
+      }, () => {this.setupController(true)})
     } else if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${id}`) > -1){
       //check if the song has been downloaded
       this.setState({
@@ -328,7 +329,7 @@ class Player extends Component{
           url: this.props.downloadedSong[`${tag}${id}`].filePath
         },
         loaded: true,
-      });
+      }, () => {this.setupController(true)});
     } else {
       api.getSongURL(vendor, id, albumID)
         .then(url => {
@@ -338,7 +339,7 @@ class Player extends Component{
               url,
             },
             loaded: true,
-          });
+          }, () => {this.setupController(true)});
         })
         .catch(err => {
           Alert.alert('next song err T_T');
@@ -350,6 +351,7 @@ class Player extends Component{
   }
 
   onEnd(){
+    MusicControl.resetNowPlaying();
     const { nextSong } = this.state;
     this.setState({
       songLength: 1,
@@ -359,6 +361,7 @@ class Player extends Component{
       artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
       vendor: nextSong.vendor,
       id: nextSong.id,
+      playing: true,
     }, () => {
       let nextNextSong = this.getNextSong();
       this.getNextSongURL(nextNextSong);
@@ -366,6 +369,7 @@ class Player extends Component{
   }
 
   manuallySetNextSong(){
+    MusicControl.resetNowPlaying();
     const { nextSong } = this.state;
     if(nextSong.url === this.state.url){
       this.setState({
@@ -385,6 +389,7 @@ class Player extends Component{
         vendor: nextSong.vendor,
         id: nextSong.id,
         url: nextSong.url,
+        playing: true,
       }, () => {
         let nextNextSong = this.getNextSong();
         this.getNextSongURL(nextNextSong);
@@ -416,13 +421,13 @@ class Player extends Component{
   }
 
   playNextSong(id, vendor){
+    MusicControl.resetNowPlaying();
     try{
       let nextSong = this.state.songlist.filter(i => (i.id === id && i.vendor === vendor))[0];
       let tag = 0;
       if(vendor === 'xiami'){tag = 1}
       if(vendor === 'qq'){tag = 2}
       if(vendor === 'netease'){tag = 3}
-      LayoutAnimation.easeInEaseOut();
       if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${nextSong.id}`) > -1){
         this.setState({
           songLength: 1,
@@ -536,10 +541,7 @@ class Player extends Component{
         </View>
         {
           this.state.enableBackground
-          ? <Image source={{uri: this.state.cover}} resizeMode="cover" style={styles.blur}>
-              <BlurView blurType="dark" blurAmount={40} style={styles.blur}>
-              </BlurView>
-            </Image>
+          ? <BackgroundCover uri={this.state.cover} />
           : null
         }
         <Navbar
@@ -559,10 +561,9 @@ class Player extends Component{
             {
               this.state.cover
               ? <View>
-                  <Image
+                  <Cover
                     style={styles.image}
-                    source={{uri: this.state.cover}}
-                    resizeMode={'contain'}
+                    uri={this.state.cover}
                   />
                   <View style={styles.songName}>
                     <Text style={{color: oc.gray1, fontSize: 20, marginHorizontal: 20, backgroundColor: 'transparent'}} numberOfLines={1}>
@@ -675,7 +676,7 @@ Player.defaultProps = {
   playNow: false,
 }
 
-const styles = StyleSheet.create({
+const styles = {
   header: {
     height: 64,
     width,
@@ -759,7 +760,7 @@ const styles = StyleSheet.create({
     height: 44,
     flexDirection: 'row',
   }
-});
+};
 
 const mapStateToProps = (state) => {
   let currentList = state.playlist.filter(i => i.ident === 'current')[0];

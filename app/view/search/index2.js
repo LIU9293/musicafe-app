@@ -3,9 +3,10 @@
  */
 
 import React,{ Component } from 'react';
+import { connect } from 'react-redux';
 import { Image, StyleSheet, StatusBar, Text, TextInput,
  TouchableWithoutFeedback, Animated, Easing, View,
- TouchableOpacity, Picker, ScrollView, Alert } from 'react-native';
+ TouchableOpacity, Picker, ScrollView, Alert, AsyncStorage } from 'react-native';
 import { size } from 'lib';
 import Icon from 'react-native-vector-icons/Ionicons';
 import KeyboardSpacer from 'react-native-keyboard-spacer';
@@ -15,7 +16,7 @@ import api from 'api';
 import MusicIcon from 'MusicIcon';
 import { jumpForward } from 'lib';
 
-export default class Search2 extends Component{
+class Search2 extends Component{
   constructor() {
     super();
     this.state = {
@@ -33,6 +34,18 @@ export default class Search2 extends Component{
     this.hideSearchTextInput = this.hideSearchTextInput.bind(this);
     this.changeText = this.changeText.bind(this);
     this.searchSuggestion = this.searchSuggestion.bind(this);
+    this.search = this.search.bind(this);
+  }
+
+  async componentWillMount(){
+    try {
+      let history = await AsyncStorage.getItem('searchHistory');
+      if(history){
+        this.props.updateSearchHistory(JSON.parse(history));
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   showSearchTextInput() {
@@ -72,11 +85,37 @@ export default class Search2 extends Component{
     });
   }
 
+  search(text){
+    this.setState({
+      on: 0,
+      scale: new Animated.Value(1),
+      scaleOn: 0,
+      text: '',
+    });
+    if(text === ''){
+      Alert.alert('你都搜了什么...');
+      return;
+    }
+    try {
+      AsyncStorage.setItem('searchHistory', JSON.stringify(this.props.searchHistory.concat([text])));
+    } catch (error) {
+      console.log(error);
+    }
+    this.props.addSearchHistory(text);
+    let route = {
+      ident: 'SearchDetail',
+      type: this.state.searchType,
+      searchKey: text,
+    };
+    this.props.navigator.push(route);
+  }
+
   submit(){
     this.setState({
       on: 0,
       scale: new Animated.Value(1),
       scaleOn: 0,
+      text: '',
     })
     if(this.state.text === ''){
       Alert.alert(
@@ -85,12 +124,17 @@ export default class Search2 extends Component{
       )
       return;
     }
+    try {
+      AsyncStorage.setItem('searchHistory', JSON.stringify(this.props.searchHistory.concat([this.state.text])));
+    } catch (error) {
+      console.log(error);
+    }
+    this.props.addSearchHistory(this.state.text);
     let route = {
       ident: 'SearchDetail',
       type: this.state.searchType,
       searchKey: this.state.text,
     };
-    console.log(route);
     this.props.navigator.push(route);
   }
 
@@ -127,12 +171,11 @@ export default class Search2 extends Component{
   }
 
   render() {
-    let suggestions;
+    let suggestions, historys;
     if(this.state.suggestionData.length > 0){
-      console.log(this.state.suggestionData);
       suggestions = this.state.suggestionData.map((i, index) => {
         return(
-          <TouchableOpacity style={styles.row} key={index+1}>
+          <TouchableOpacity style={styles.row} key={index+1} onPress={e => this.search(i.toString())}>
             <Text
               style={{color: oc.white}}
               numberOfLines={1}
@@ -147,6 +190,25 @@ export default class Search2 extends Component{
           <Text style={{color: oc.gray2, marginVertical: 5}}>{`热门搜索: `}</Text>
         </View>
       )
+    }
+    if(this.props.searchHistory && this.props.searchHistory.length > 0){
+      historys = this.props.searchHistory.map((i, index) => {
+        return(
+          <TouchableOpacity style={styles.row} key={index+1} onPress={e => this.search(i.toString())}>
+            <Text
+              style={{color: oc.white}}
+              numberOfLines={1}
+            >
+              {i.toString()}
+            </Text>
+          </TouchableOpacity>
+        )
+      });
+      historys.unshift(
+        <View key={0} style={{marginHorizontal: 20, marginVertical: 5}}>
+          <Text style={{color: oc.gray2, marginVertical: 5}}>{`历史搜索: `}</Text>
+        </View>
+      );
     }
     return(
       <Wapper style={{marginBottom: this.state.textInputFocus ? 0 : 50}}>
@@ -207,7 +269,11 @@ export default class Search2 extends Component{
                 <View
                   style={{height: 1, width: 100, backgroundColor: oc.gray5, marginBottom: 5, marginLeft: 20}}
                 />
-                {suggestions}
+                {
+                  this.state.text.length > 0
+                  ? suggestions
+                  : historys
+                }
               </ScrollView>
               <View style={{height: 50, width: size.width, justifyContent: 'center', alignItems: 'center'}}>
                 <TouchableOpacity
@@ -301,9 +367,28 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   row: {
-    height: 34,
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
   }
 });
+
+const mapStateToProps = (state) => {
+  return {
+    searchHistory: state.searchHistory
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    addSearchHistory: (key) => {
+      dispatch({type: 'SEARCH_KEY_PUSH_ONE', key});
+    },
+    updateSearchHistory: (history) => {
+      dispatch({type: 'SEARCH_KEY_UPDATE', history})
+    }
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Search2)

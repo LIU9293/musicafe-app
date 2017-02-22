@@ -14,7 +14,6 @@
    renderScene(route, navigator){
      switch (route.ident) {
        case 'Player':
-         console.log(route);
          return(
            <Player
              PlayerRouter={navigator}

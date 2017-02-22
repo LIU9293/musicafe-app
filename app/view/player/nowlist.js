@@ -68,7 +68,7 @@ class NowList extends Component{
      paddingHorizontal: 20,
    },
    row: {
-     height: 46,
+     height: 50,
      flex: 1,
      width: width - 40,
      justifyContent: 'space-between',

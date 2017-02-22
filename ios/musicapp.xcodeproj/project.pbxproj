@@ -32,6 +32,7 @@
 		832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832341B51AAA6A8300B99B32 /* libRCTText.a */; };
 		92C66C5232A64BC5BAAD533F /* libRNVectorIcons.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CB8D72640EB446BCB1707429 /* libRNVectorIcons.a */; };
 		A410DED502D74EE2874C1865 /* Entypo.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A86D542495A442C8AE69F2F3 /* Entypo.ttf */; };
+		A51987B3AAC344E78A996779 /* libBVLinearGradient.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DFBB630BCAB043CD963618E6 /* libBVLinearGradient.a */; };
 		A842484DFC9E48CEB7CC6B5D /* MaterialCommunityIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 07B078EBC91F4B25BC74E5E6 /* MaterialCommunityIcons.ttf */; };
 		AF3A6668825D4A6FABDB4AA1 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 28345B48566E4AA49B8FCDE4 /* Ionicons.ttf */; };
 		B0C670C64FBB477F8E96C9C6 /* FontAwesome.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 28E40847952648B3BC1692DE /* FontAwesome.ttf */; };
@@ -188,6 +189,13 @@
 			remoteGlobalIDString = 3D3CD9181DE5FBD800167DC4;
 			remoteInfo = "jschelpers-tvOS";
 		};
+		4F02D09C1E5DDD1300398B83 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8E45864709C94410B0D1465A /* BVLinearGradient.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 134814201AA4EA6300B7C361;
+			remoteInfo = BVLinearGradient;
+		};
 		4F5916751E549CD2004A92DE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D57335A6383A41E3954BEBFA /* MusicControl.xcodeproj */;
@@ -291,6 +299,7 @@
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
 		83DFC90692F448DBBDEC5F47 /* Foundation.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Foundation.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Foundation.ttf"; sourceTree = "<group>"; };
 		8DEC996193674E8282E3465E /* RNSpinkit.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNSpinkit.xcodeproj; path = "../node_modules/react-native-spinkit/ios/RNSpinkit.xcodeproj"; sourceTree = "<group>"; };
+		8E45864709C94410B0D1465A /* BVLinearGradient.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = BVLinearGradient.xcodeproj; path = "../node_modules/react-native-linear-gradient/BVLinearGradient.xcodeproj"; sourceTree = "<group>"; };
 		92B252D23D204145837FCF33 /* libMusicControl.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libMusicControl.a; sourceTree = "<group>"; };
 		97D3330895154F2996D2C324 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRCTVideo.a; sourceTree = "<group>"; };
 		A468C1A6086F48D7BA2F11BF /* libRNBlur.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNBlur.a; sourceTree = "<group>"; };
@@ -302,6 +311,7 @@
 		CB8D72640EB446BCB1707429 /* libRNVectorIcons.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNVectorIcons.a; sourceTree = "<group>"; };
 		CC841C9DE6954FE48FF5C773 /* Zocial.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Zocial.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Zocial.ttf"; sourceTree = "<group>"; };
 		D57335A6383A41E3954BEBFA /* MusicControl.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = MusicControl.xcodeproj; path = "../node_modules/react-native-music-control/ios/MusicControl.xcodeproj"; sourceTree = "<group>"; };
+		DFBB630BCAB043CD963618E6 /* libBVLinearGradient.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libBVLinearGradient.a; sourceTree = "<group>"; };
 		F78D9D0DBFCB40038BDCB281 /* RNFS.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNFS.xcodeproj; path = "../node_modules/react-native-fs/RNFS.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -327,6 +337,7 @@
 				21209087D1EB4EFEAC2EB283 /* libRNSpinkit.a in Frameworks */,
 				339B80152365423B8B664CB7 /* libRCTVideo.a in Frameworks */,
 				4BD2E06941E647E88EF07CC5 /* libMusicControl.a in Frameworks */,
+				A51987B3AAC344E78A996779 /* libBVLinearGradient.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +433,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		4F02D0991E5DDD1100398B83 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4F02D09D1E5DDD1300398B83 /* libBVLinearGradient.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4F5916721E549CD2004A92DE /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -476,6 +495,7 @@
 				8DEC996193674E8282E3465E /* RNSpinkit.xcodeproj */,
 				AF403D1C82D44BD4BD49894F /* RCTVideo.xcodeproj */,
 				D57335A6383A41E3954BEBFA /* MusicControl.xcodeproj */,
+				8E45864709C94410B0D1465A /* BVLinearGradient.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -607,6 +627,10 @@
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = 4F02D0991E5DDD1100398B83 /* Products */;
+					ProjectRef = 8E45864709C94410B0D1465A /* BVLinearGradient.xcodeproj */;
+				},
 				{
 					ProductGroup = 4F5916721E549CD2004A92DE /* Products */;
 					ProjectRef = D57335A6383A41E3954BEBFA /* MusicControl.xcodeproj */;
@@ -831,6 +855,13 @@
 			remoteRef = 3DAD3EAE1DF850E9000B6D8A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		4F02D09D1E5DDD1300398B83 /* libBVLinearGradient.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libBVLinearGradient.a;
+			remoteRef = 4F02D09C1E5DDD1300398B83 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4F5916761E549CD2004A92DE /* libMusicControl.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -977,11 +1008,7 @@
 				DEVELOPMENT_TEAM = 2HV5K37XAM;
 				INFOPLIST_FILE = musicapp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/musicapp\"",
-					"\"$(SRCROOT)/musicapp\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1004,11 +1031,7 @@
 				DEVELOPMENT_TEAM = 2HV5K37XAM;
 				INFOPLIST_FILE = musicapp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/musicapp\"",
-					"\"$(SRCROOT)/musicapp\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",

@@ -1,19 +1,24 @@
 import { combineReducers } from 'redux';
 
-const searchKeyInitState = {
-  key: null,
-  type: 'album',
-  vendor: ['xiami', 'qq', 'netease']
-}
-
-const searchKey = (state = searchKeyInitState, action) => {
+const searchHistory = (state = [], action) => {
   switch (action.type) {
-    case 'SEARCH_KEY_UPDATE_KEY':
-      return {...state, key: action.key}
-    case 'SEARCH_KEY_UPDATE_TYPE':
-      return {...state, type: action.searchType}
-    case 'SEARCH_KET_UPDATE_VENDOR':
-      return {...state, vendor: action.vendor}
+    case 'SEARCH_KEY_PUSH_ONE':
+      if(state.indexOf(action.key) > -1){
+        return [...state];
+      } else {
+        if(state.length < 10){
+          let newState = [...state];
+          newState.unshift(action.key);
+          return [...newState]
+        } else {
+          let newState = [...state];
+          newState = newState.slice(1);
+          newState.unshift(action.key);
+          return [...newState]
+        }
+      }
+    case 'SEARCH_KEY_UPDATE':
+      return action.history;
     default:
       return state;
   }
@@ -145,7 +150,7 @@ const downloadingSong = (state = [], action) => {
 
 export default combineReducers({
   playlist,
-  searchKey,
+  searchHistory,
   appStatus,
   downloadedSong,
   downloadingSong,
