@@ -337,6 +337,9 @@ const mapStateToProps = (state, props) => {
   if(vendor === 'netease' && (needPay || offline)){
     canload = false;
   }
+  if(props.fromType === 'userDownloadlist'){
+    canload = true;
+  }
   return{
     playlist: state.playlist,
     downloadedSong: state.downloadedSong,
