@@ -16,10 +16,9 @@ class AddPlaylist extends Component{
     this.state = {
       text: '',
     };
-    this.addList = this.addList.bind(this);
   }
 
-  addList(){
+  addList = () => {
     if(this.state.text === ''){
       Alert.alert('歌单名不能为空哦~😯');
       return

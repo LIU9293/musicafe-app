@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet, LayoutAnimation } from 'react-native';
 import { size } from 'lib';
 const { BlurView } = require('react-native-blur');
 
@@ -12,13 +12,15 @@ class Cover extends Component{
     }
   }
   render(){
+    LayoutAnimation.easeInEaseOut();
     return(
-      <Image source={{uri: this.props.uri}} resizeMode={'contain'} style={this.props.style} />
+      <Image source={{uri: this.props.uri, cache: "force-cache"}} resizeMode={'contain'} style={this.props.style} />
     )
   }
 }
 
 class BackgroundCover extends Component{
+
   shouldComponentUpdate(nextProps){
     if(nextProps.uri !== this.props.uri){
       return true;
@@ -26,9 +28,11 @@ class BackgroundCover extends Component{
       return false;
     }
   }
+
   render(){
+    LayoutAnimation.easeInEaseOut();
     return(
-      <Image source={{uri: this.props.uri}} resizeMode="cover" style={styles.blur}>
+      <Image source={{uri: this.props.uri, cache: "force-cache"}} resizeMode="cover" style={styles.blur}>
         <BlurView blurType="dark" blurAmount={40} style={styles.blur}>
         </BlurView>
       </Image>

@@ -73,7 +73,8 @@ const playlist = (state = initPlaylist, action) => {
             ident: 'current',
             name: '正在播放',
             defaultSongID: item.defaultSongID,
-            songs: action.list
+            songs: action.list,
+            fromType: action.fromType,
           }
         } else {
           return item;

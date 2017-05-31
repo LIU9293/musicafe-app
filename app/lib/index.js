@@ -26,7 +26,7 @@ export const jumpForward = (route) => {
   }
 }
 
-export const downloadOneSong = (vendor, id, albumID, songData, dispatch) => {
+export const downloadOneSong = (vendor, id, albumID, songData, dispatch, currentListType) => {
   return new Promise((resolve, reject) => {
     api.getSongURL(vendor, id, albumID)
       .then(url => {
@@ -61,7 +61,6 @@ export const downloadOneSong = (vendor, id, albumID, songData, dispatch) => {
         ret.promise
           .then(res => {
             console.log(`download file is: file://${downloadDest}`);
-            console.log(`download response is: `, res);
             let newSongData = {
               ...songData,
               vendor: vendor,
@@ -80,7 +79,6 @@ export const downloadOneSong = (vendor, id, albumID, songData, dispatch) => {
               songData: newSongData
             });
             jobId = -1;
-            console.log('newSongData is : ', newSongData);
             try {
               AsyncStorage.getItem('download')
                 .then(data => {
@@ -94,10 +92,12 @@ export const downloadOneSong = (vendor, id, albumID, songData, dispatch) => {
                   let initData = {};
                   initData[key] = newSongData;
                   AsyncStorage.setItem(`download`, JSON.stringify(initData));
-                })
+                });
             } catch (error) {
               throw 'AsyncStorage error';
-            }
+            };
+            // TODO: add the song manually in song list if listening downloaded song.
+            // If the currently playing list is download song, we need add the song in the list
           })
           .catch(err => {
             jobId = -1;

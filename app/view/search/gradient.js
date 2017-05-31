@@ -1,20 +1,38 @@
 /*
- * @providesModule gardient
+ * @providesModule gradient
  */
-
 import React, { Component } from 'react';
-import { Image, StyleSheet, Text } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+const BG = require('../../assets/images/bg.png');
+import { size } from 'lib';
 
 class Gardient extends Component{
   render(){
     return(
-      <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={styles.linearGradient}>
-        <Text style={styles.buttonText}>
-          Sign in with Facebook
-        </Text>
-      </LinearGradient>
+      <View style={styles.container}>
+        <LinearGradient colors={['#228AE6', '#15AABF', '#12B786']} style={styles.LinearGradient}>
+        </LinearGradient>
+        <Image
+          source={BG}
+          style={styles.container}
+          resizeMode="contain"
+        />
+      </View>
     )
+  }
+}
+
+const styles = {
+  container: {
+    width: size.width,
+    height: 220,
+  },
+  LinearGradient: {
+    width: size.width,
+    height: 160,
+    position: 'absolute',
+    top: 30,
   }
 }
 

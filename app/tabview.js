@@ -81,7 +81,7 @@ class TabView extends Component{
         >
           <Icon.TabBarItemIOS
             selected={this.state.tab === "home"}
-            title={"discover"}
+            title={"发现"}
             key="home"
             iconColor={oc.gray3}
             selectedIconColor={oc.gray1}
@@ -93,7 +93,7 @@ class TabView extends Component{
           </Icon.TabBarItemIOS>
           <Icon.TabBarItemIOS
             selected={this.state.tab === "search"}
-            title={"search"}
+            title={"搜索"}
             key="search"
             iconColor={oc.gray3}
             selectedIconColor={oc.gray1}
@@ -105,7 +105,7 @@ class TabView extends Component{
           </Icon.TabBarItemIOS>
           <Icon.TabBarItemIOS
             selected={this.state.tab === "playlist"}
-            title={"music"}
+            title={"音乐"}
             key="playlist"
             iconColor={oc.gray3}
             selectedIconColor={oc.gray1}

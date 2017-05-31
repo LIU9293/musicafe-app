@@ -6,6 +6,7 @@ import store from 'store';
 import Route from 'route';
 import PlayerRouter from 'PlayerRouter';
 import { Provider } from 'react-redux';
+import codePush from "react-native-code-push";
 
 class App extends Component{
   render(){
@@ -16,5 +17,7 @@ class App extends Component{
     )
   }
 }
+
+App = codePush(App);
 
 export default App

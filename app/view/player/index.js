@@ -4,7 +4,7 @@
 
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Slider, TouchableOpacity, InteractionManager,
-  Image, Alert, ActivityIndicator, ScrollView, LayoutAnimation } from 'react-native';
+  Image, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import Video from 'react-native-video';
 import oc from 'oc';
 import api from 'api';
@@ -40,22 +40,6 @@ class Player extends Component{
       enableBackground: false,
     };
     this.isDragging = false;
-    this.mute = this.mute.bind(this);
-    this.changeSwitchType = this.changeSwitchType.bind(this);
-    this.PlayOrPause = this.PlayOrPause.bind(this);
-    this.getSongURL = this.getSongURL.bind(this);
-    this.onEnd = this.onEnd.bind(this);
-    this.onLoad = this.onLoad.bind(this);
-    this.setTime = this.setTime.bind(this);
-    this.setSongPosition = this.setSongPosition.bind(this);
-    this.dragSlider = this.dragSlider.bind(this);
-    this.getNextSong = this.getNextSong.bind(this);
-    this.getNextSongURL = this.getNextSongURL.bind(this);
-    this.manuallySetNextSong = this.manuallySetNextSong.bind(this);
-    this.setupController = this.setupController.bind(this);
-    this.downloadSong = this.downloadSong.bind(this);
-    this.playNextSong = this.playNextSong.bind(this);
-    this.handlePageChange = this.handlePageChange.bind(this);
   }
 
   componentWillReceiveProps(nextProps){
@@ -64,7 +48,6 @@ class Player extends Component{
         let nextSong = this.getNextSong();
         this.getNextSongURL(nextSong);
       });
-
     }
     if(nextProps.defaultSongID !== this.props.defaultSongID){
       this.setState({ songlist: nextProps.currentList }, () => {
@@ -109,23 +92,23 @@ class Player extends Component{
     MusicControl.resetNowPlaying();
   }
 
-  downloadSong(){
+  downloadSong = () => {
     //first, get current song info
     let {songlist, vendor, id} = this.state;
-    let { dispatch } = this.props;
+    let { dispatch, currentListType } = this.props;
     let nowPlayingSong = songlist.filter(i => (i.id === id && i.vendor === vendor))[0];
     if(!nowPlayingSong){
       Alert.alert('下载出错～ 😯');
       return;
     } else {
-      downloadOneSong(nowPlayingSong.vendor, nowPlayingSong.id, nowPlayingSong.album.id, nowPlayingSong, dispatch)
+      downloadOneSong(nowPlayingSong.vendor, nowPlayingSong.id, nowPlayingSong.album.id, nowPlayingSong, dispatch, currentListType)
         .catch(e => {
           Alert.alert('下载出错～ 😯');
         });
     }
   }
 
-  setupController(playing){
+  setupController = (playing) => {
     MusicControl.setNowPlaying({
       title: this.state.name,
       artwork: this.state.cover, // URL or File path
@@ -136,7 +119,7 @@ class Player extends Component{
     this.setupRemoteControl();
   }
 
-  setupRemoteControl(){
+  setupRemoteControl = () => {
     MusicControl.enableControl('play', true);
     MusicControl.enableControl('pause', true);
     MusicControl.enableControl('nextTrack', true);
@@ -144,7 +127,7 @@ class Player extends Component{
     MusicControl.enableControl('skipBackward', true, {interval: 15});
   }
 
-  getSongInfoFromList(){
+  getSongInfoFromList = () => {
     const { songlist } = this.state;
     const { defaultSongID } = this.props;
     let song;
@@ -183,7 +166,7 @@ class Player extends Component{
     }
   }
 
-  getSongURL(song){
+  getSongURL = (song) => {
     let { vendor, id } = song;
     let albumID = song.album.id;
     let tag = 0;
@@ -221,7 +204,7 @@ class Player extends Component{
     });
   }
 
-  PlayOrPause(){
+  PlayOrPause = () => {
     if(this.state.playing){
       this.props.changePlayStatus(2);
       this.setupController(false);
@@ -232,7 +215,7 @@ class Player extends Component{
     this.setState({playing: !this.state.playing});
   }
 
-  setSongPosition(e){
+  setSongPosition = (e) => {
     if(!this.state.loaded){
       return;
     }
@@ -240,7 +223,7 @@ class Player extends Component{
     this.isDragging = false;
   }
 
-  onLoad(e){
+  onLoad = (e) => {
     // set the duration of the song
     let duration = e.duration;
     this.setupController(this.state.playing);
@@ -249,7 +232,7 @@ class Player extends Component{
     });
   }
 
-  setTime(e){
+  setTime = (e) => {
     if(!this.isDragging){
       this.setState({
         currentPosition: parseInt(e.currentTime),
@@ -257,19 +240,21 @@ class Player extends Component{
       MusicControl.setNowPlaying({
         duration: parseInt(this.state.songLength),
         elapsedPlaybackTime: parseInt(e.currentTime),
+        title: this.state.name,
+        artist: this.state.artist,
       })
     }
   }
 
-  mute(e){
+  mute = (e) => {
     this.setState({mute: !this.state.mute});
   }
 
-  changeSwitchType(e){
+  changeSwitchType = (e) => {
     this.setState({random: !this.state.random});
   }
 
-  getNextSong(){
+  getNextSong = () => {
     const { songlist } = this.state;
     let song;
     if(songlist.length === 1){
@@ -306,7 +291,7 @@ class Player extends Component{
     return song;
   }
 
-  getNextSongURL(song){
+  getNextSongURL = (song) => {
     let { vendor, id } = song;
     let albumID = song.album.id;
     let tag = 0;
@@ -350,7 +335,7 @@ class Player extends Component{
     }
   }
 
-  onEnd(){
+  onEnd = () => {
     MusicControl.resetNowPlaying();
     const { nextSong } = this.state;
     this.setState({
@@ -368,8 +353,7 @@ class Player extends Component{
     });
   }
 
-  manuallySetNextSong(){
-    MusicControl.resetNowPlaying();
+  manuallySetNextSong = () => {
     const { nextSong } = this.state;
     if(nextSong.url === this.state.url){
       this.setState({
@@ -397,17 +381,16 @@ class Player extends Component{
     }
   }
 
-  onError(e){
-    console.log(e);
-    Alert.alert(JSON.stringify(e));
+  onError = (e) => {
+    Alert.alert('出错了～😯');
   }
 
-  dragSlider(e){
+  dragSlider = (e) => {
     this.isDragging = true;
     this.setState({currentPosition: e});
   }
 
-  convertTime(value){
+  convertTime = (value) => {
     if(typeof(value) === 'string'){
       return value
     }
@@ -420,7 +403,7 @@ class Player extends Component{
     }
   }
 
-  playNextSong(id, vendor){
+  playNextSong = (id, vendor) => {
     MusicControl.resetNowPlaying();
     try{
       let nextSong = this.state.songlist.filter(i => (i.id === id && i.vendor === vendor))[0];
@@ -428,7 +411,7 @@ class Player extends Component{
       if(vendor === 'xiami'){tag = 1}
       if(vendor === 'qq'){tag = 2}
       if(vendor === 'netease'){tag = 3}
-      if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${nextSong.id}`) > -1){
+      if(nextSong.filePath){
         this.setState({
           songLength: 1,
           currentPosition: 0,
@@ -437,31 +420,47 @@ class Player extends Component{
           artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
           vendor: nextSong.vendor,
           id: nextSong.id,
-          url: this.props.downloadedSong[`${tag}${id}`].filePath,
+          url: nextSong.filePath,
         }, () => {
           let nextNextSong = this.getNextSong();
           this.getNextSongURL(nextNextSong);
-        })
+        });
       } else {
-        api.getSongURL(nextSong.vendor, nextSong.id, nextSong.album.id)
-          .then(url => {
-            if(url === this.state.url){
-              return;
-            }
-            this.setState({
-              songLength: 1,
-              currentPosition: 0,
-              cover: nextSong.album.coverBig || nextSong.album.cover,
-              name: nextSong.name,
-              artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
-              vendor: nextSong.vendor,
-              id: nextSong.id,
-              url: url,
-            }, () => {
-              let nextNextSong = this.getNextSong();
-              this.getNextSongURL(nextNextSong);
-            })
-          });
+        if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${nextSong.id}`) > -1){
+          this.setState({
+            songLength: 1,
+            currentPosition: 0,
+            cover: nextSong.album.coverBig || nextSong.album.cover,
+            name: nextSong.name,
+            artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+            vendor: nextSong.vendor,
+            id: nextSong.id,
+            url: this.props.downloadedSong[`${tag}${id}`].filePath,
+          }, () => {
+            let nextNextSong = this.getNextSong();
+            this.getNextSongURL(nextNextSong);
+          })
+        } else {
+          api.getSongURL(nextSong.vendor, nextSong.id, nextSong.album.id)
+            .then(url => {
+              if(url === this.state.url){
+                return;
+              }
+              this.setState({
+                songLength: 1,
+                currentPosition: 0,
+                cover: nextSong.album.coverBig || nextSong.album.cover,
+                name: nextSong.name,
+                artist: nextSong.artist || nextSong.artists.map(i => i.name).join(' & '),
+                vendor: nextSong.vendor,
+                id: nextSong.id,
+                url: url,
+              }, () => {
+                let nextNextSong = this.getNextSong();
+                this.getNextSongURL(nextNextSong);
+              })
+            });
+        }
       }
     } catch(e){
       console.log(e);
@@ -469,9 +468,8 @@ class Player extends Component{
     }
   }
 
-  handlePageChange(e){
+  handlePageChange = (e) => {
     let offset = e.nativeEvent.contentOffset;
-    LayoutAnimation.easeInEaseOut();
     if(offset) {
       var page = Math.round(offset.x / size.width) + 1;
       if(page === 1){
@@ -609,7 +607,7 @@ class Player extends Component{
             maximumValue={this.state.songLength || 1}
             minimumValue={0}
             step={1}
-            value={this.state.currentPosition}
+            value={!this.isDragging && this.state.currentPosition}
             style={{width: width-100, height: 50}}
             onSlidingComplete={this.setSongPosition}
             onValueChange={this.dragSlider}
@@ -765,6 +763,7 @@ const styles = {
 const mapStateToProps = (state) => {
   let currentList = state.playlist.filter(i => i.ident === 'current')[0];
   return {
+    currentListType: currentList.fromType,
     currentList: currentList.songs,
     defaultSongID: currentList.defaultSongID,
     downloadedSong: state.downloadedSong,

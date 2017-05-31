@@ -42,7 +42,7 @@ class SonglistDetail extends Component{
         this.setState({listData: res, loaded: true, err: null});
       })
       .catch(err => {
-        console.log(err);
+        console.error(err);
         this.setState({
           err: err === 'timeout' ? 'timeout' : 'network err'
         });

@@ -15,6 +15,7 @@ import oc from 'oc';
 import api from 'api';
 import MusicIcon from 'MusicIcon';
 import { jumpForward } from 'lib';
+import Gradient from 'gradient';
 
 class Search2 extends Component{
   constructor() {
@@ -28,13 +29,6 @@ class Search2 extends Component{
       textInputFocus: false,
       suggestionData: [],
     }
-    this.submit = this.submit.bind(this);
-    this.jump = this.jump.bind(this);
-    this.showSearchTextInput = this.showSearchTextInput.bind(this);
-    this.hideSearchTextInput = this.hideSearchTextInput.bind(this);
-    this.changeText = this.changeText.bind(this);
-    this.searchSuggestion = this.searchSuggestion.bind(this);
-    this.search = this.search.bind(this);
   }
 
   async componentWillMount(){
@@ -48,7 +42,7 @@ class Search2 extends Component{
     }
   }
 
-  showSearchTextInput() {
+  showSearchTextInput = () => {
     this.setState({
       on:1,
     });
@@ -66,7 +60,7 @@ class Search2 extends Component{
     });
   }
 
-  hideSearchTextInput() {
+  hideSearchTextInput = () => {
     this.setState({
       text: '',
       scaleOn:0,
@@ -85,7 +79,7 @@ class Search2 extends Component{
     });
   }
 
-  search(text){
+  search = (text) => {
     this.setState({
       on: 0,
       scale: new Animated.Value(1),
@@ -110,7 +104,7 @@ class Search2 extends Component{
     this.props.navigator.push(route);
   }
 
-  submit(){
+  submit = () => {
     this.setState({
       on: 0,
       scale: new Animated.Value(1),
@@ -138,11 +132,11 @@ class Search2 extends Component{
     this.props.navigator.push(route);
   }
 
-  jump(e){
+  jump = (e) => {
     jumpForward(this.props.PlayerRouter);
   }
 
-  changeText(text){
+  changeText = (text) => {
     console.log(text);
     this.setState({text});
     if(text === ''){
@@ -154,7 +148,7 @@ class Search2 extends Component{
     }
   }
 
-  searchSuggestion(text){
+  searchSuggestion = (text) => {
     api.getSearchSuggestion(text)
       .then(res => {
         let suggestions = [];
@@ -219,7 +213,8 @@ class Search2 extends Component{
             <TouchableOpacity onPress={this.jump} style={styles.musicIcon}>
               <MusicIcon />
             </TouchableOpacity>
-            <View style={{alignItems: 'center', marginBottom: 50}}>
+            <Gradient />
+            <View style={{alignItems: 'center'}}>
               <Picker
                 style={{width: size.width}}
                 itemStyle={{color: oc.white}}
@@ -300,7 +295,7 @@ class Search2 extends Component{
 const styles = StyleSheet.create({
   content:{
     flex: 1,
-    paddingTop: 120,
+    paddingTop: 60,
   },
   picker: {
     width:size.width,

@@ -24,11 +24,6 @@
        dataSource: ds.cloneWithRows([]),
        err: null,
      }
-     this.searchData = this.searchData.bind(this);
-     this.renderRow = this.renderRow.bind(this);
-     this.loadMore = this.loadMore.bind(this);
-     this.renderFooter = this.renderFooter.bind(this);
-     this.pushNext = this.pushNext.bind(this);
    }
 
    componentDidMount(){
@@ -37,7 +32,7 @@
      });
    }
 
-   searchData(limit, page){
+   searchData = (limit, page) => {
      const { type, vendor, searchKey } = this.props;
      api[`search${type}`](vendor, searchKey, limit, page)
       .then(res => {
@@ -81,7 +76,7 @@
       });
    }
 
-   renderRow(rowData, sectionID, rowID){
+   renderRow = (rowData, sectionID, rowID) => {
      const { type, vendor } = this.props;
      let cover = (type === 'song') ? rowData.album.cover : rowData.coverSmall;
      if(type === 'song'){
@@ -99,6 +94,10 @@
            fromType={'song'}
            listData={[rowData]}
            PlayerRouter={this.props.PlayerRouter}
+           artist={rowData.artists.map(item => item.name).join(' & ')}
+           showArtist
+           showAlbum
+           navigator={this.props.navigator}
          />
        )
      }
@@ -126,7 +125,7 @@
      )
    }
 
-   pushNext(rowData){
+   pushNext = (rowData) => {
      const { type } = this.props;
      if(type !== 'song'){
        this.props.navigator.push({
@@ -141,13 +140,13 @@
      }
    }
 
-   loadMore(){
+   loadMore = () => {
      if(this.state.data.length < this.state.total){
        this.searchData(15, this.state.page);
      }
    }
 
-   renderFooter(){
+   renderFooter = () => {
      if(this.state.data.length < this.state.total){
        return(
          <View style={styles.footer}>

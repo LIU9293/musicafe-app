@@ -22,30 +22,25 @@ class SongRowWithAction extends Component{
       modal: false,
       step: 1,
     }
-    this.play = this.play.bind(this);
-    this.showModal = this.showModal.bind(this);
-    this.hideModal = this.hideModal.bind(this);
-    this.addSong = this.addSong.bind(this);
-    this.download = this.download.bind(this);
-    this.chooseList = this.chooseList.bind(this);
-    this.renderModal = this.renderModal.bind(this);
-    this.renderActions = this.renderActions.bind(this);
-    this.renderPlaylist = this.renderPlaylist.bind(this);
-    this.deleteSong = this.deleteSong.bind(this);
-    this.pushToAlbum = this.pushToAlbum.bind(this);
   }
 
-  play(){
-    let data = this.props.listData.map(item => {
-      return {
-        ...item,
-        vendor: this.props.vendor,
-      }
-    });
-    if(this.props.vendor === 'netease'){
-      data = data.filter(i => (i.needPay === false && i.offlineNow === false));
+  play = () => {
+    let data;
+    let { fromType } = this.props;
+    if(fromType !== 'userDownloadlist' && fromType !== 'UserPlaylistDetail'){
+      let data = this.props.listData.map(item => {
+        return {
+          ...item,
+          vendor: this.props.vendor,
+        }
+      });
+      //delete cannot listen songs
+      data = data.filter(i => !i.needPay && !i.offlineNow);
+      this.props.updateCurrentPlaylist(data, this.props.id, fromType);
+    } else {
+      data = this.props.listData;
+      this.props.updateCurrentPlaylist(data, this.props.id, fromType);
     }
-    this.props.updateCurrentPlaylist(data, this.props.id);
     this.props.PlayerRouter.push({
       ident: 'Player',
       playNow: true,
@@ -56,19 +51,19 @@ class SongRowWithAction extends Component{
     });
   }
 
-  showModal(){
+  showModal = () => {
     this.setState({modal: true})
   }
 
-  hideModal(){
+  hideModal = () => {
     this.setState({modal: false, step: 1});
   }
 
-  chooseList(e){
+  chooseList = (e) => {
     this.setState({step: 2});
   }
 
-  addSong(listIdent){
+  addSong = (listIdent) => {
     let { songData, fromType, albumID, cover, vendor, playlist } = this.props;
     let newSongData = {
       ...songData,
@@ -92,7 +87,7 @@ class SongRowWithAction extends Component{
     }
   }
 
-  download(e){
+  download = (e) => {
     let {songData, fromType, cover, vendor, id, albumID, dispatch} = this.props;
     this.setState({
       modal: false,
@@ -111,7 +106,7 @@ class SongRowWithAction extends Component{
     });
   }
 
-  pushToAlbum(songData){
+  pushToAlbum = (songData) => {
     this.setState({
       modal: false,
       step: 1,
@@ -127,7 +122,7 @@ class SongRowWithAction extends Component{
     });
   }
 
-  deleteSong(fromType, songData, playlistIdent){
+  deleteSong = (fromType, songData, playlistIdent) => {
     if(fromType === 'userDownloadlist'){
       console.log('will delete song in download list');
       try{
@@ -149,7 +144,7 @@ class SongRowWithAction extends Component{
     });
   }
 
-  renderModal(){
+  renderModal = () => {
     let action = this.state.step === 1 ? this.renderActions() : this.renderPlaylist()
     return(
       <Modal
@@ -172,7 +167,7 @@ class SongRowWithAction extends Component{
     )
   }
 
-  renderActions(){
+  renderActions = () => {
     let { downloading, downloaded, showAlbum, fromType, songData, playlistIdent } = this.props;
     if(downloaded){
       icon = <Icon name="ios-checkmark-circle" style={{color: oc.teal3}} size={26} />
@@ -216,7 +211,7 @@ class SongRowWithAction extends Component{
     return basicButtonArray;
   }
 
-  renderPlaylist(){
+  renderPlaylist = () => {
     const { playlist } = this.props;
     let buttons = playlist.map((list, index) => {
       if(list.ident === 'current'){ return null }
@@ -339,10 +334,8 @@ const mapStateToProps = (state, props) => {
   } else if (state.downloadingSong.filter(i => (i.id === id && i.vendor === vendor))[0]){
     downloading = true;
   }
-  if(vendor === 'netease'){
-    if(needPay || offline){
-      canload = false;
-    }
+  if(vendor === 'netease' && (needPay || offline)){
+    canload = false;
   }
   return{
     playlist: state.playlist,
@@ -359,8 +352,8 @@ const mapDispatchToProps = (dispatch) => {
     addSong: (ident, song) => {
       dispatch({type: 'ADD_SONG', ident, song});
     },
-    updateCurrentPlaylist: (list, songID) => {
-      dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID});
+    updateCurrentPlaylist: (list, songID, fromType) => {
+      dispatch({type: 'UPDATE_CURRENT_PLAYLIST_WITH_SONG', list, songID, fromType});
     },
     addDownloadSong: (uiqID, songData) => {
       dispatch({type: 'ADD_DOWNLOADED_SONG', uiqID, songData});

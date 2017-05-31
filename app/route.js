@@ -13,10 +13,9 @@ import Player from 'Player';
  class Route extends Component{
    constructor(props){
      super(props);
-     this.renderScene = this.renderScene.bind(this);
    }
 
-   renderScene(route, navigator){
+   renderScene = (route, navigator) => {
      switch (route.ident){
        case 'SonglistDetail':
          return(
@@ -52,7 +51,7 @@ import Player from 'Player';
        case 'AddPlaylist':
          return(
            <AddPlaylist
-            navigator={navigator} 
+            navigator={navigator}
             PlayerRouter={this.props.PlayerRouter}
           />
          )

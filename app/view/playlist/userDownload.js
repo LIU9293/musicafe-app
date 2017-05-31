@@ -14,7 +14,6 @@ class UserDownload extends Component{
 
   render(){
     let list;
-    console.log(Object.values(this.props.downloadedSong));
     list = Object.values(this.props.downloadedSong).map((song, index) => {
       return (
         <SongRowWithAction
@@ -54,9 +53,8 @@ class UserDownload extends Component{
 const styles = StyleSheet.create({
   scroll: {
     position: 'absolute',
-    height: size.height - 64,
+    height: size.height - 64 - 50,
     width: size.width,
-    paddingBottom: 64,
   },
 });
 
