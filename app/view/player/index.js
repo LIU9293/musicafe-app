@@ -305,7 +305,7 @@ class Player extends Component{
           url: song.filePath
         },
         loaded: true,
-      }, () => {this.setupController(true)})
+      })
     } else if(Object.keys(this.props.downloadedSong).indexOf(`${tag}${id}`) > -1){
       //check if the song has been downloaded
       this.setState({
@@ -314,7 +314,7 @@ class Player extends Component{
           url: this.props.downloadedSong[`${tag}${id}`].filePath
         },
         loaded: true,
-      }, () => {this.setupController(true)});
+      });
     } else {
       api.getSongURL(vendor, id, albumID)
         .then(url => {
@@ -324,7 +324,7 @@ class Player extends Component{
               url,
             },
             loaded: true,
-          }, () => {this.setupController(true)});
+          });
         })
         .catch(err => {
           Alert.alert('next song err T_T');
@@ -336,7 +336,6 @@ class Player extends Component{
   }
 
   onEnd = () => {
-    MusicControl.resetNowPlaying();
     const { nextSong } = this.state;
     this.setState({
       songLength: 1,
@@ -348,6 +347,9 @@ class Player extends Component{
       id: nextSong.id,
       playing: true,
     }, () => {
+      setTimeout(() => {
+        this.setupController(true);
+      }, 50);
       let nextNextSong = this.getNextSong();
       this.getNextSongURL(nextNextSong);
     });
@@ -607,7 +609,7 @@ class Player extends Component{
             maximumValue={this.state.songLength || 1}
             minimumValue={0}
             step={1}
-            value={!this.isDragging && this.state.currentPosition}
+            value={this.state.currentPosition}
             style={{width: width-100, height: 50}}
             onSlidingComplete={this.setSongPosition}
             onValueChange={this.dragSlider}

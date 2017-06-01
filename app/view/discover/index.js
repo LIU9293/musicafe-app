@@ -9,8 +9,9 @@ import oc from 'oc';
 import Wapper from 'wapper';
 import Loading from 'Loading';
 import MusicIcon from 'MusicIcon';
-import { jumpForward } from 'lib';
+import { jumpForward, shuffle } from 'lib';
 import refetch from 're-fetch';
+import { getSugggestAlbum } from 'api';
 
 class Discover extends Component{
   constructor(props){
@@ -18,50 +19,57 @@ class Discover extends Component{
     this.state = {
       album: null,
       playlist: null,
+      suggestion:  null,
       loaded: false,
       fetchErr: null,
     }
-    this.pushToDetail = this.pushToDetail.bind(this);
-    this.JumpToPlayer = this.JumpToPlayer.bind(this);
-    this.fetchData = this.fetchData.bind(this);
   }
 
   componentWillMount(){
     this.fetchData();
   }
 
-  fetchData(){
+  fetchData = () => {
     this.setState({fetchErr: null}, () => {
-      refetch('https://musicafe.co/suggestion.json', {}, 4000, 2)
-        .then(res => res.json())
-        .then(json => {
+      Promise.all([
+        getSugggestAlbum(),
+        this.getEditorChoice()
+      ])
+        .then(res => {
+          const { xiami, qq } = res[0];
+          const { album, playlist } = res[1];
+          const xiamiSuggestion = xiami.albumList.map(item => ({
+            ...item,
+            vendor: 'xiami'
+          }));
+          const qqSuggestion = qq.albumList.map(item => ({
+            ...item,
+            vendor: 'qq'
+          }))
           this.setState({
-            album: json.album,
-            playlist: json.playlist,
-            loaded: true,
-            fetchErr: null,
-          });
-        })
-        .catch(err => {
-          console.log(err);
-          if(err === 'timeout'){
-            this.setState({
-              fetchErr: '超时了～ 😯'
-            });
-          } else {
-            this.setState({
-              fetchErr: '请检查网络～ 😯'
-            });
-          }
+            album,
+            playlist,
+            suggestion: shuffle([...xiamiSuggestion, ...qqSuggestion]),
+            loaded: true
+          })
         })
     })
   }
 
-  JumpToPlayer(){
+  getEditorChoice = () => {
+    return new Promise((resolve, reject) => {
+      refetch('https://raw.githubusercontent.com/LIU9293/musicAPI/master/test/suggestion.json', {}, 4000, 2)
+        .then(res => res.json())
+        .then(json => resolve(json))
+        .catch(err => reject(err));
+    });
+  }
+
+  JumpToPlayer = () => {
     jumpForward(this.props.PlayerRouter);
   }
 
-  pushToDetail(props){
+  pushToDetail = (props) => {
     this.props.navigator.push({
       ...props,
       ident: 'SonglistDetail',
@@ -83,7 +91,7 @@ class Discover extends Component{
       let albumList = this.state.album.map((item, index) => {
         return (
           <TouchableOpacity
-            key={index}
+            key={item.id}
             style={[styles.album, {marginLeft: index === 0 ? 20 : 0}]}
             onPress={e => this.pushToDetail({
               cover: item.cover,
@@ -107,7 +115,7 @@ class Discover extends Component{
       let playlists = this.state.playlist.map((item, index) => {
         return (
           <TouchableOpacity
-            key={index}
+            key={item.id}
             style={[styles.album, {marginLeft: index === 0 ? 20 : 0}]}
             onPress={e => this.pushToDetail({
               cover: item.cover,
@@ -128,6 +136,30 @@ class Discover extends Component{
           </TouchableOpacity>
         )
       });
+      let suggestionList = this.state.suggestion.map((item, index) => {
+        return (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.album, {marginLeft: index === 0 ? 20 : 0}]}
+            onPress={e => this.pushToDetail({
+              cover: item.cover,
+              name: item.name,
+              artist: item.artist.name,
+              vendor: item.vendor,
+              id: item.id,
+              type: 'album',
+            })}
+          >
+            <Image source={{uri: item.cover}} style={{width: 160, height: 160}} />
+            <Image source={{uri: item.cover}} style={styles.nameArea}>
+              <BlurView blurType="dark" blurAmount={20} style={styles.blur}>
+                <Text style={styles.albumName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.artist} numberOfLines={1}>{item.artist.name}</Text>
+              </BlurView>
+            </Image>
+          </TouchableOpacity>
+        )
+      })
       return(
         <Wapper style={{backgroundColor: oc.black, paddingBottom: 50}}>
           <ScrollView style={{flex: 1, backgroundColor: oc.black}}>
@@ -141,14 +173,14 @@ class Discover extends Component{
               horizontal={true}
               showsHorizontalScrollIndicator={false}
             >
-              {albumList}
+              {suggestionList}
             </ScrollView>
-            <Text style={[styles.title, {marginTop: 30}]}>推荐歌单</Text>
+            <Text style={[styles.title, {marginTop: 30}]}>编辑精选</Text>
             <ScrollView
               horizontal={true}
               showsHorizontalScrollIndicator={false}
             >
-              {playlists}
+              {shuffle(albumList.concat(playlists))}
             </ScrollView>
           </ScrollView>
         </Wapper>

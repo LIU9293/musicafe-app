@@ -107,6 +107,15 @@ const getSearchSuggestion = (key) => {
   });
 }
 
+const getSugggestAlbum = () => {
+  return new Promise((resolve, reject) => {
+    refetch(`${base}suggest/album/all?limit=10`, {}, 4000, 2)
+      .then(res => res.json())
+      .then(json => resolve(json))
+      .catch(err => reject(err))
+  });
+}
+
 module.exports = {
   searchsong,
   searchalbum,
@@ -115,5 +124,6 @@ module.exports = {
   getalbum,
   getplaylist,
   getSongURL,
-  getSearchSuggestion
+  getSearchSuggestion,
+  getSugggestAlbum
 }
