@@ -35,7 +35,9 @@ class SongRowWithAction extends Component{
         }
       });
       //delete cannot listen songs
-      data = data.filter(i => !i.needPay && !i.offlineNow);
+      if(this.props.vendor === 'netease'){
+        data = data.filter(i => !i.needPay && !i.offlineNow);
+      }
       this.props.updateCurrentPlaylist(data, this.props.id, fromType);
     } else {
       data = this.props.listData;
