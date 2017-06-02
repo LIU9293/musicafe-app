@@ -116,7 +116,7 @@ class Discover extends Component{
         return (
           <TouchableOpacity
             key={item.id}
-            style={[styles.album, {marginLeft: index === 0 ? 20 : 0}]}
+            style={styles.album}
             onPress={e => this.pushToDetail({
               cover: item.cover,
               name: item.name,
@@ -180,7 +180,7 @@ class Discover extends Component{
               horizontal={true}
               showsHorizontalScrollIndicator={false}
             >
-              {shuffle(albumList.concat(playlists))}
+              {albumList.concat(playlists)}
             </ScrollView>
           </ScrollView>
         </Wapper>
