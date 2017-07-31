@@ -2,7 +2,7 @@
  * @providesModule api
  */
 import refetch from 're-fetch';
-const base = 'http://musicafe.co:8080/api/';
+const base = 'https://music-api-pjheqeosjj.now.sh/api/';
 
 const searchsong = (vendor, key, limit, page) => {
   return new Promise((resolve, reject) => {

@@ -91,7 +91,11 @@ class Search2 extends Component{
       return;
     }
     try {
-      AsyncStorage.setItem('searchHistory', JSON.stringify(this.props.searchHistory.concat([text])));
+      let history = this.props.searchHistory
+        .concat([text])
+        .slice(1, 11);
+      history = Array.from(new Set(history));
+      AsyncStorage.setItem('searchHistory', JSON.stringify(history));
     } catch (error) {
       console.log(error);
     }
@@ -119,7 +123,11 @@ class Search2 extends Component{
       return;
     }
     try {
-      AsyncStorage.setItem('searchHistory', JSON.stringify(this.props.searchHistory.concat([this.state.text])));
+      let history = this.props.searchHistory
+        .concat([text])
+        .slice(1, 11);
+      history = Array.from(new Set(history));
+      AsyncStorage.setItem('searchHistory', JSON.stringify(history));
     } catch (error) {
       console.log(error);
     }
